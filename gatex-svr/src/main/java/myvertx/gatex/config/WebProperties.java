@@ -2,6 +2,7 @@ package myvertx.gatex.config;
 
 import java.util.List;
 
+import io.vertx.core.json.JsonObject;
 import lombok.Data;
 import myvertx.gatex.api.GatexRoute;
 
@@ -21,6 +22,11 @@ public class WebProperties {
      * 是否需要CORS
      */
     private Boolean          isCors    = false;
+
+    /**
+     * httpServerOptions
+     */
+    private JsonObject       options;
 
     /**
      * 路由列表

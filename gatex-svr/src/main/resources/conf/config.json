@@ -3,9 +3,12 @@
 	"web": {
 		"instances": 3,
 		"config": {
-			"port": 8090,
 			"isLogging": true,
 			"isCors": true,
+			"options": {
+				"port": 8090,
+				"logActivity": true
+			},
 			"routes": [
 				{
 					"src": {

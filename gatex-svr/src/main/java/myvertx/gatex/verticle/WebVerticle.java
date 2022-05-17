@@ -12,6 +12,7 @@ import io.vertx.core.eventbus.Message;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServer;
+import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.impl.Arguments;
 import io.vertx.ext.web.Route;
 import io.vertx.ext.web.Router;
@@ -49,6 +50,8 @@ public class WebVerticle extends AbstractVerticle {
     @Override
     public void start() {
         this.webProperties = config().mapTo(WebProperties.class);
+        this.webProperties.setOptions(config().getJsonObject("options"));
+        final HttpServerOptions httpServerOptions = this.webProperties.getOptions() == null ? new HttpServerOptions() : new HttpServerOptions(this.webProperties.getOptions());
 
         log.info("创建路由器");
         this.router      = Router.router(this.vertx);
@@ -72,11 +75,8 @@ public class WebVerticle extends AbstractVerticle {
         // 配置路由
         configRoutes();
 
-        final List<Route> routes = this.router.getRoutes();
-        log.debug("routes: {}", routes);
-
         // 创建HttpServer
-        this.httpServer = this.vertx.createHttpServer().requestHandler(this.router);
+        this.httpServer = this.vertx.createHttpServer(httpServerOptions).requestHandler(this.router);
         // 订阅启动监听器的事件
         this.vertx.eventBus()
                 .consumer(EVENT_BUS_WEB_START, this::handleStart)
@@ -120,7 +120,7 @@ public class WebVerticle extends AbstractVerticle {
             }
 
             if (routes.isEmpty()) {
-                log.info("匹配所有路由");
+                log.info("此路由为全局路由");
                 routes.add(this.globalRoute);
             }
 
@@ -130,6 +130,7 @@ public class WebVerticle extends AbstractVerticle {
             Arguments.require(dst.getPort() != null, "routes[].dst.port不能为null");
 
             final HttpClient proxyClient = this.vertx.createHttpClient();
+            // final WebClient c;
             final HttpProxy  httpProxy   = HttpProxy.reverseProxy(proxyClient)
                     .origin(dst.getPort(), dst.getHost());
             if (StringUtils.isNotBlank(dst.getPath())) {
@@ -138,7 +139,8 @@ public class WebVerticle extends AbstractVerticle {
                     public Future<ProxyResponse> handleProxyRequest(final ProxyContext context) {
                         log.debug("context.request().getURI()", context.request().getURI());
                         context.request().setURI(dst.getPath().trim() + context.request().getURI());
-                        return ProxyInterceptor.super.handleProxyRequest(context);
+                        // 继续拦截链
+                        return context.sendRequest();
                     }
                 });
             }
@@ -171,7 +173,7 @@ public class WebVerticle extends AbstractVerticle {
     }
 
     private void handleStart(final Message<Void> message) {
-        this.httpServer.listen(this.webProperties.getPort(), res -> {
+        this.httpServer.listen(res -> {
             if (res.succeeded()) {
                 log.info("HTTP server started on port " + res.result().actualPort());
             } else {
