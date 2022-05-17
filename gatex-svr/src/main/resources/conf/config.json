@@ -1,16 +1,22 @@
 {
-	"main": {
-		"captchaTimeout": 60
-	},
+	"main": {},
 	"web": {
 		"instances": 3,
 		"config": {
-			"port": 8888
+			"port": 8090,
+			"isLogging": true,
+			"isCors": true,
+			"routes": [
+				{
+					"src": {
+						"path": "/captcha/*"
+					},
+					"dst": {
+						"host": "127.0.0.1",
+						"port": 8888
+					}
+				}
+			]
 		}
-	},
-	"redis": {
-		"connectionString": "redis://127.0.0.1:6379",
-		"maxPoolSize": 8,
-		"maxWaitingHandlers": 32
 	}
 }

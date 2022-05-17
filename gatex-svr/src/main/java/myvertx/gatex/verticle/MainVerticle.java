@@ -33,7 +33,7 @@ public class MainVerticle extends AbstractVerticle {
 
     @Override
     public void start(final Promise<Void> startPromise) throws Exception {
-        final ConfigRetriever retriever = ConfigRetriever.create(vertx);
+        final ConfigRetriever retriever = ConfigRetriever.create(this.vertx);
         retriever.getConfig(configRes -> {
             log.info("config result: {}", configRes.result());
 
@@ -58,14 +58,14 @@ public class MainVerticle extends AbstractVerticle {
             webVerticleFuture
                     .onSuccess(handle -> {
                         log.info("部署Verticle完成");
-                        vertx.eventBus().publish(WebVerticle.EVENT_BUS_WEB_START, null);
+                        this.vertx.eventBus().publish(WebVerticle.EVENT_BUS_WEB_START, null);
                         log.info("启动完成.");
                         startPromise.complete();
                     })
                     .onFailure(err -> {
                         log.error("启动失败.", err);
                         startPromise.fail(err);
-                        vertx.close();
+                        this.vertx.close();
                     });
         });
     }
@@ -80,7 +80,7 @@ public class MainVerticle extends AbstractVerticle {
      * @return Future
      */
     private Future<String> deployVerticle(final String verticleName, final Class<? extends Verticle> verticleClass, final JsonObject config) {
-        return vertx.deployVerticle(verticleClass,
+        return this.vertx.deployVerticle(verticleClass,
                 new DeploymentOptions(config.getJsonObject(verticleName)));
     }
 }
