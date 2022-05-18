@@ -13,7 +13,6 @@ import io.vertx.core.Verticle;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.json.jackson.DatabindCodec;
 import lombok.extern.slf4j.Slf4j;
-import myvertx.gatex.config.MainProperties;
 
 @Slf4j
 @SuppressWarnings("deprecation")
@@ -47,9 +46,6 @@ public class MainVerticle extends AbstractVerticle {
                 startPromise.fail("Get config is empty");
                 return;
             }
-
-            // 读取main的配置
-            final MainProperties mainProperties = config.getJsonObject("main").mapTo(MainProperties.class);
 
             log.info("部署verticle");
             final Future<String> webVerticleFuture = deployVerticle("web", WebVerticle.class, config);
