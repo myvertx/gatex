@@ -5,7 +5,7 @@
 		"config": {
 			"isLogging": true,
 			"isCors": true,
-			"options": {
+			"serverOptions": {
 				"port": 8090,
 				"logActivity": true
 			},
@@ -16,7 +16,10 @@
 					},
 					"dst": {
 						"host": "127.0.0.1",
-						"port": 8888
+						"port": 8888,
+						"clientOptions": {
+							"logActivity": true
+						}
 					}
 				}
 			]

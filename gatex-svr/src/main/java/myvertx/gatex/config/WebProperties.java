@@ -1,8 +1,8 @@
 package myvertx.gatex.config;
 
 import java.util.List;
+import java.util.Map;
 
-import io.vertx.core.json.JsonObject;
 import lombok.Data;
 import myvertx.gatex.api.GatexRoute;
 
@@ -11,26 +11,26 @@ public class WebProperties {
     /**
      * Web服务器监听的端口号
      */
-    private Integer          port      = 0;
+    private Integer             port      = 0;
 
     /**
      * 是否记录日志
      */
-    private Boolean          isLogging = false;
+    private Boolean             isLogging = false;
 
     /**
      * 是否需要CORS
      */
-    private Boolean          isCors    = false;
+    private Boolean             isCors    = false;
 
     /**
      * httpServerOptions
      */
-    private JsonObject       options;
+    private Map<String, Object> serverOptions;
 
     /**
      * 路由列表
      */
-    private List<GatexRoute> routes;
+    private List<GatexRoute>    routes;
 
 }

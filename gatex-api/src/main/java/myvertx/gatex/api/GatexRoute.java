@@ -30,9 +30,10 @@ public class GatexRoute {
 
     @Data
     public static class Dst {
-        private String  host;
-        private Integer port;
-        private String  path;
+        private String              host;
+        private Integer             port;
+        private String              path;
+        private Map<String, Object> clientOptions;
     }
 
 }

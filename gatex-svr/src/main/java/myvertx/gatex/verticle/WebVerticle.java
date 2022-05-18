@@ -10,10 +10,12 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.http.HttpClient;
+import io.vertx.core.http.HttpClientOptions;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServer;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.impl.Arguments;
+import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Route;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.handler.CorsHandler;
@@ -50,8 +52,9 @@ public class WebVerticle extends AbstractVerticle {
     @Override
     public void start() {
         this.webProperties = config().mapTo(WebProperties.class);
-        this.webProperties.setOptions(config().getJsonObject("options"));
-        final HttpServerOptions httpServerOptions = this.webProperties.getOptions() == null ? new HttpServerOptions() : new HttpServerOptions(this.webProperties.getOptions());
+        // 获取HttpServerOptions
+        final HttpServerOptions httpServerOptions = this.webProperties.getServerOptions() == null ? new HttpServerOptions()
+                : new HttpServerOptions(JsonObject.mapFrom(this.webProperties.getServerOptions()));
 
         log.info("创建路由器");
         this.router      = Router.router(this.vertx);
@@ -129,8 +132,17 @@ public class WebVerticle extends AbstractVerticle {
             Arguments.require(dst.getHost() != null, "routes[].dst.host不能为null");
             Arguments.require(dst.getPort() != null, "routes[].dst.port不能为null");
 
-            final HttpClient proxyClient = this.vertx.createHttpClient();
-            // final WebClient c;
+            // 获取HttpClientOptions
+            // dst.setClientOptions(config().getJsonObject("clientOptions"));
+            final HttpClientOptions httpClientOptions = dst.getClientOptions() == null ? new HttpClientOptions()
+                    : new HttpClientOptions(JsonObject.mapFrom(dst.getClientOptions()));
+
+            log.debug("dst: {}", dst.getClientOptions());
+
+            // 创建httpClient
+            final HttpClient proxyClient = this.vertx.createHttpClient(httpClientOptions);
+            // final HttpClient proxyClient = this.vertx.createHttpClient();
+            // 创建Http代理
             final HttpProxy  httpProxy   = HttpProxy.reverseProxy(proxyClient)
                     .origin(dst.getPort(), dst.getHost());
             if (StringUtils.isNotBlank(dst.getPath())) {
