@@ -1,7 +1,10 @@
 package myvertx.gatex.verticle;
 
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.ServiceLoader;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -26,6 +29,7 @@ import io.vertx.httpproxy.ProxyContext;
 import io.vertx.httpproxy.ProxyInterceptor;
 import io.vertx.httpproxy.ProxyResponse;
 import lombok.extern.slf4j.Slf4j;
+import myvertx.gatex.api.GatexPredicate;
 import myvertx.gatex.api.GatexRoute;
 import myvertx.gatex.api.GatexRoute.Dst;
 import myvertx.gatex.config.WebProperties;
@@ -85,13 +89,18 @@ public class WebVerticle extends AbstractVerticle {
      * 根据配置中的路由列表来配置路由
      */
     private void configRoutes() {
+        log.info("注册predicate");
+        final ServiceLoader<GatexPredicate> serviceLoader = ServiceLoader.load(GatexPredicate.class);
+        final Map<String, GatexPredicate>   predicates    = new HashMap<>();
+        serviceLoader.forEach(predicate -> predicates.put(predicate.name(), predicate));
+
         log.info("根据配置中的路由列表来配置路由");
-        for (final GatexRoute gatexRoute : this.webProperties.getRoutes()) {
+        for (final GatexRoute gatexRouteConfig : this.webProperties.getRoutes()) {
             final List<Route> routes = new LinkedList<>();
 
             log.debug("读取routes[].src.path");
-            if (gatexRoute.getSrc() != null) {
-                final Object pathObj = gatexRoute.getSrc().getPath();
+            if (gatexRouteConfig.getSrc() != null) {
+                final Object pathObj = gatexRouteConfig.getSrc().getPath();
                 if (pathObj != null) {
                     if (pathObj instanceof final String pathStr) {
                         addRoute(routes, pathStr, false);
@@ -103,7 +112,7 @@ public class WebVerticle extends AbstractVerticle {
                 }
 
                 log.debug("读取routes[].src.regexPath");
-                final Object regexPathObj = gatexRoute.getSrc().getRegexPath();
+                final Object regexPathObj = gatexRouteConfig.getSrc().getRegexPath();
                 if (regexPathObj != null) {
                     if (regexPathObj instanceof final String pathStr) {
                         addRoute(routes, pathStr, true);
@@ -120,7 +129,7 @@ public class WebVerticle extends AbstractVerticle {
                 routes.add(this.globalRoute);
             }
 
-            final Dst dst = gatexRoute.getDst();
+            final Dst dst = gatexRouteConfig.getDst();
             Arguments.require(dst != null, "routes[].dst不能为null");
             Arguments.require(dst.getHost() != null, "routes[].dst.host不能为null");
             Arguments.require(dst.getPort() != null, "routes[].dst.port不能为null");
@@ -144,7 +153,34 @@ public class WebVerticle extends AbstractVerticle {
                     }
                 });
             }
-            routes.forEach(route -> route.handler(ProxyHandler.create(httpProxy)));
+            routes.forEach(route -> {
+                route.handler(ctx -> {
+                    log.debug("进入predicate判断");
+                    // 外循环是and判断(全部条件都为true才为true)，所以没有断言时，默认为true
+                    boolean andTrue = true;
+                    for (final Map<String, Object> gatexPredicateConfig : gatexRouteConfig.getPredicates()) {
+                        // 内循环是or判断(只要有一个条件为true就为true)
+                        boolean orTrue = false;
+                        for (final Map.Entry<String, Object> entry : gatexPredicateConfig.entrySet()) {
+                            final GatexPredicate gatexPredicate = predicates.get(entry.getKey());
+                            if (gatexPredicate.test(ctx, entry.getValue())) {
+                                orTrue = true;
+                                break;
+                            }
+                        }
+                        if (!orTrue) {
+                            andTrue = false;
+                            break;
+                        }
+                    }
+                    if (andTrue) {
+                        ctx.next();
+                    } else {
+                        ctx.end();
+                    }
+                });
+                route.handler(ProxyHandler.create(httpProxy));
+            });
         }
     }
 
