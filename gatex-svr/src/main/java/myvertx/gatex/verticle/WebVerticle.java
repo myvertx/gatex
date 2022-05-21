@@ -29,9 +29,6 @@ import lombok.extern.slf4j.Slf4j;
 import myvertx.gatex.api.GatexRoute;
 import myvertx.gatex.api.GatexRoute.Dst;
 import myvertx.gatex.config.WebProperties;
-import myvertx.gatex.predicate.PathPredicate;
-import myvertx.gatex.predicate.PredicateFactory;
-import myvertx.gatex.predicate.RegexPathPredicate;
 
 @Slf4j
 public class WebVerticle extends AbstractVerticle {
@@ -53,8 +50,8 @@ public class WebVerticle extends AbstractVerticle {
     public void start() {
         this.webProperties = config().mapTo(WebProperties.class);
         // 获取HttpServerOptions
-        final HttpServerOptions httpServerOptions = this.webProperties.getServerOptions() == null ? new HttpServerOptions()
-                : new HttpServerOptions(JsonObject.mapFrom(this.webProperties.getServerOptions()));
+        final HttpServerOptions httpServerOptions = this.webProperties.getServer() == null ? new HttpServerOptions()
+                : new HttpServerOptions(JsonObject.mapFrom(this.webProperties.getServer()));
 
         log.info("创建路由器");
         this.router      = Router.router(this.vertx);
@@ -63,17 +60,13 @@ public class WebVerticle extends AbstractVerticle {
         // 记录日志
         if (this.webProperties.getIsLogging()) {
             log.info("开启日志记录");
-            this.globalRoute.handler(LoggerHandler.create());
+            this.globalRoute.handler(LoggerHandler.create(this.webProperties.getLoggerFormat()));
         }
         // CORS
         if (this.webProperties.getIsCors()) {
             log.info("开启CORS");
             this.globalRoute.handler(CorsHandler.create("*").allowedMethod(HttpMethod.GET));
         }
-
-        // 注册predicate
-        PredicateFactory.create(PathPredicate.class);
-        PredicateFactory.create(RegexPathPredicate.class);
 
         // 配置路由
         configRoutes();
@@ -133,17 +126,12 @@ public class WebVerticle extends AbstractVerticle {
             Arguments.require(dst.getPort() != null, "routes[].dst.port不能为null");
 
             // 获取HttpClientOptions
-            // dst.setClientOptions(config().getJsonObject("clientOptions"));
-            final HttpClientOptions httpClientOptions = dst.getClientOptions() == null ? new HttpClientOptions()
-                    : new HttpClientOptions(JsonObject.mapFrom(dst.getClientOptions()));
-
-            log.debug("dst: {}", dst.getClientOptions());
-
+            final HttpClientOptions httpClientOptions = dst.getClient() == null ? new HttpClientOptions()
+                    : new HttpClientOptions(JsonObject.mapFrom(dst.getClient()));
             // 创建httpClient
-            final HttpClient proxyClient = this.vertx.createHttpClient(httpClientOptions);
-            // final HttpClient proxyClient = this.vertx.createHttpClient();
+            final HttpClient        proxyClient       = this.vertx.createHttpClient(httpClientOptions);
             // 创建Http代理
-            final HttpProxy  httpProxy   = HttpProxy.reverseProxy(proxyClient)
+            final HttpProxy         httpProxy         = HttpProxy.reverseProxy(proxyClient)
                     .origin(dst.getPort(), dst.getHost());
             if (StringUtils.isNotBlank(dst.getPath())) {
                 httpProxy.addInterceptor(new ProxyInterceptor() {

@@ -24,16 +24,34 @@ public class GatexRoute {
 
     @Data
     public static class Src {
+        /**
+         * 匹配来源的路径(匹配前面部分)
+         */
         private Object path;
+        /**
+         * 匹配来源的路径(正则表达式)
+         */
         private Object regexPath;
     }
 
     @Data
     public static class Dst {
+        /**
+         * 目的地的主机名
+         */
         private String              host;
+        /**
+         * 目的地的端口号
+         */
         private Integer             port;
+        /**
+         * 目的地路径的前缀
+         */
         private String              path;
-        private Map<String, Object> clientOptions;
+        /**
+         * httpClientOptions
+         */
+        private Map<String, Object> client;
     }
 
 }
