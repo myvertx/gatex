@@ -41,6 +41,8 @@
 			<AppenderRef ref="logfile" />
 			<AppenderRef ref="errfile" />
 		</Root>
+		<Logger name="com.hazelcast" level="info" />
+		<Logger name="io.netty" level="info" />
 	</Loggers>
 
 </Configuration>
