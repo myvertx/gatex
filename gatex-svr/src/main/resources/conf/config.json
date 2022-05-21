@@ -16,7 +16,19 @@
 					},
 					"dst": {
 						"host": "127.0.0.1",
-						"port": 8888,
+						"port": 9000,
+						"clientOptions": {
+							"logActivity": true
+						}
+					}
+				},
+				{
+					"src": {
+						"path": "/b02/*"
+					},
+					"dst": {
+						"host": "127.0.0.1",
+						"port": 9202,
 						"clientOptions": {
 							"logActivity": true
 						}
