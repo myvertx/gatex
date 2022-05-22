@@ -1,11 +1,11 @@
-package myvertx.gatex.predicate;
+package myvertx.gatex.predicater;
 
 import java.util.List;
 
 import io.vertx.ext.web.RoutingContext;
-import myvertx.gatex.api.GatexPredicate;
+import myvertx.gatex.api.GatexPredicater;
 
-public class RegexPathPredicate implements GatexPredicate {
+public class RegexPathPredicate implements GatexPredicater {
 
     @Override
     public String name() {

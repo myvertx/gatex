@@ -29,7 +29,7 @@ import io.vertx.httpproxy.ProxyContext;
 import io.vertx.httpproxy.ProxyInterceptor;
 import io.vertx.httpproxy.ProxyResponse;
 import lombok.extern.slf4j.Slf4j;
-import myvertx.gatex.api.GatexPredicate;
+import myvertx.gatex.api.GatexPredicater;
 import myvertx.gatex.api.GatexRoute;
 import myvertx.gatex.api.GatexRoute.Dst;
 import myvertx.gatex.config.WebProperties;
@@ -89,10 +89,10 @@ public class WebVerticle extends AbstractVerticle {
      * 根据配置中的路由列表来配置路由
      */
     private void configRoutes() {
-        log.info("注册predicate");
-        final ServiceLoader<GatexPredicate> serviceLoader = ServiceLoader.load(GatexPredicate.class);
-        final Map<String, GatexPredicate>   predicates    = new HashMap<>();
-        serviceLoader.forEach(predicate -> predicates.put(predicate.name(), predicate));
+        log.info("注册predicater");
+        final ServiceLoader<GatexPredicater> serviceLoader = ServiceLoader.load(GatexPredicater.class);
+        final Map<String, GatexPredicater>   predicaters   = new HashMap<>();
+        serviceLoader.forEach(predicater -> predicaters.put(predicater.name(), predicater));
 
         log.info("根据配置中的路由列表来配置路由");
         for (final GatexRoute gatexRouteConfig : this.webProperties.getRoutes()) {
@@ -157,23 +157,23 @@ public class WebVerticle extends AbstractVerticle {
                 route.handler(ctx -> {
                     log.debug("进入predicate判断");
                     // 外循环是and判断(全部条件都为true才为true)，所以没有断言时，默认为true
-                    boolean andTrue = true;
+                    boolean andResult = true;
                     for (final Map<String, Object> gatexPredicateConfig : gatexRouteConfig.getPredicates()) {
                         // 内循环是or判断(只要有一个条件为true就为true)
-                        boolean orTrue = false;
+                        boolean orResult = false;
                         for (final Map.Entry<String, Object> entry : gatexPredicateConfig.entrySet()) {
-                            final GatexPredicate gatexPredicate = predicates.get(entry.getKey());
+                            final GatexPredicater gatexPredicate = predicaters.get(entry.getKey());
                             if (gatexPredicate.test(ctx, entry.getValue())) {
-                                orTrue = true;
+                                orResult = true;
                                 break;
                             }
                         }
-                        if (!orTrue) {
-                            andTrue = false;
+                        if (!orResult) {
+                            andResult = false;
                             break;
                         }
                     }
-                    if (andTrue) {
+                    if (andResult) {
                         ctx.next();
                     } else {
                         ctx.end();

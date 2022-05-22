@@ -2,7 +2,13 @@ package myvertx.gatex.api;
 
 import io.vertx.ext.web.RoutingContext;
 
-public interface GatexPredicate {
+/**
+ * 断言器
+ *
+ * @author zbz
+ *
+ */
+public interface GatexPredicater {
 
     String name();
 
