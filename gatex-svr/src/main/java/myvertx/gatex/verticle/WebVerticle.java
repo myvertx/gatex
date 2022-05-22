@@ -29,6 +29,7 @@ import io.vertx.httpproxy.ProxyContext;
 import io.vertx.httpproxy.ProxyInterceptor;
 import io.vertx.httpproxy.ProxyResponse;
 import lombok.extern.slf4j.Slf4j;
+import myvertx.gatex.api.GatexMatcher;
 import myvertx.gatex.api.GatexPredicater;
 import myvertx.gatex.api.GatexRoute;
 import myvertx.gatex.api.GatexRoute.Dst;
@@ -36,19 +37,23 @@ import myvertx.gatex.config.WebProperties;
 
 @Slf4j
 public class WebVerticle extends AbstractVerticle {
-    public static final String EVENT_BUS_WEB_START = "myvertx.gatex.verticle.web.start";
+    public static final String           EVENT_BUS_WEB_START = "myvertx.gatex.verticle.web.start";
 
-    private WebProperties      webProperties;
-    private HttpServer         httpServer;
+    private WebProperties                webProperties;
+    private HttpServer                   httpServer;
 
     /**
      * 路由器
      */
-    private Router             router;
+    private Router                       router;
     /**
      * 全局路由
      */
-    private Route              globalRoute;
+    private Route                        globalRoute;
+
+    private Map<String, GatexPredicater> _predicaters        = new HashMap<>();
+
+    private Map<String, GatexMatcher>    _matchers           = new HashMap<>();;
 
     @Override
     public void start() {
@@ -89,17 +94,22 @@ public class WebVerticle extends AbstractVerticle {
      * 根据配置中的路由列表来配置路由
      */
     private void configRoutes() {
+        log.info("注册matcher");
+        final ServiceLoader<GatexMatcher> matcherServiceLoader = ServiceLoader.load(GatexMatcher.class);
+        matcherServiceLoader.forEach(matcher -> this._matchers.put(matcher.name(), matcher));
+
         log.info("注册predicater");
-        final ServiceLoader<GatexPredicater> serviceLoader = ServiceLoader.load(GatexPredicater.class);
-        final Map<String, GatexPredicater>   predicaters   = new HashMap<>();
-        serviceLoader.forEach(predicater -> predicaters.put(predicater.name(), predicater));
+        final ServiceLoader<GatexPredicater> predicaterServiceLoader = ServiceLoader.load(GatexPredicater.class);
+        predicaterServiceLoader.forEach(predicater -> this._predicaters.put(predicater.name(), predicater));
 
         log.info("根据配置中的路由列表来配置路由");
         for (final GatexRoute gatexRouteConfig : this.webProperties.getRoutes()) {
+            // 当前循环配置路由所配置的路由列表
             final List<Route> routes = new LinkedList<>();
 
-            log.debug("读取routes[].src.path");
+            log.info("解析routes[].src");
             if (gatexRouteConfig.getSrc() != null) {
+                log.debug("读取routes[].src.path");
                 final Object pathObj = gatexRouteConfig.getSrc().getPath();
                 if (pathObj != null) {
                     if (pathObj instanceof final String pathStr) {
@@ -122,6 +132,17 @@ public class WebVerticle extends AbstractVerticle {
                         throw new RuntimeException("配置错误: routes[].src.regexPath属性必须是String或String[]类型");
                     }
                 }
+
+                log.debug("读取routes[].src.matchers");
+                final Map<String, Object> matchers = gatexRouteConfig.getSrc().getMatchers();
+                if (matchers != null) {
+                    matchers.entrySet().forEach(entry -> {
+                        final GatexMatcher gatexMatcher = this._matchers.get(entry.getKey());
+                        routes.forEach(route -> {
+                            gatexMatcher.addMatcher(route, entry.getValue());
+                        });
+                    });
+                }
             }
 
             if (routes.isEmpty()) {
@@ -129,6 +150,7 @@ public class WebVerticle extends AbstractVerticle {
                 routes.add(this.globalRoute);
             }
 
+            log.info("解析routes[].dst");
             final Dst dst = gatexRouteConfig.getDst();
             Arguments.require(dst != null, "routes[].dst不能为null");
             Arguments.require(dst.getHost() != null, "routes[].dst.host不能为null");
@@ -143,6 +165,7 @@ public class WebVerticle extends AbstractVerticle {
             final HttpProxy         httpProxy         = HttpProxy.reverseProxy(proxyClient)
                     .origin(dst.getPort(), dst.getHost());
             if (StringUtils.isNotBlank(dst.getPath())) {
+                log.info("配置了routes[].dst.path，在请求拦截器中将其添加到请求路径的前面做为前缀");
                 httpProxy.addInterceptor(new ProxyInterceptor() {
                     @Override
                     public Future<ProxyResponse> handleProxyRequest(final ProxyContext context) {
@@ -153,24 +176,29 @@ public class WebVerticle extends AbstractVerticle {
                     }
                 });
             }
+
+            log.info("遍历当前循环的路由列表中的每一个路由，并添加处理器");
             routes.forEach(route -> {
+                log.info("给路由添加predicater的处理器");
                 route.handler(ctx -> {
                     log.debug("进入predicate判断");
                     // 外循环是and判断(全部条件都为true才为true)，所以没有断言时，默认为true
                     boolean andResult = true;
-                    for (final Map<String, Object> gatexPredicateConfig : gatexRouteConfig.getPredicates()) {
-                        // 内循环是or判断(只要有一个条件为true就为true)
-                        boolean orResult = false;
-                        for (final Map.Entry<String, Object> entry : gatexPredicateConfig.entrySet()) {
-                            final GatexPredicater gatexPredicate = predicaters.get(entry.getKey());
-                            if (gatexPredicate.test(ctx, entry.getValue())) {
-                                orResult = true;
+                    if (gatexRouteConfig.getPredicates() != null) {
+                        for (final Map<String, Object> gatexPredicateConfig : gatexRouteConfig.getPredicates()) {
+                            // 内循环是or判断(只要有一个条件为true就为true)
+                            boolean orResult = false;
+                            for (final Map.Entry<String, Object> entry : gatexPredicateConfig.entrySet()) {
+                                final GatexPredicater gatexPredicate = this._predicaters.get(entry.getKey());
+                                if (gatexPredicate.test(ctx, entry.getValue())) {
+                                    orResult = true;
+                                    break;
+                                }
+                            }
+                            if (!orResult) {
+                                andResult = false;
                                 break;
                             }
-                        }
-                        if (!orResult) {
-                            andResult = false;
-                            break;
                         }
                     }
                     if (andResult) {
@@ -181,6 +209,7 @@ public class WebVerticle extends AbstractVerticle {
                 });
                 route.handler(ProxyHandler.create(httpProxy));
             });
+
         }
     }
 

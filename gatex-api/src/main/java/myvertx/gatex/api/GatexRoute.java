@@ -27,11 +27,15 @@ public class GatexRoute {
         /**
          * 匹配来源的路径(匹配前面部分)
          */
-        private Object path;
+        private Object              path;
         /**
          * 匹配来源的路径(正则表达式)
          */
-        private Object regexPath;
+        private Object              regexPath;
+        /**
+         * 匹配器列表
+         */
+        private Map<String, Object> matchers;
     }
 
     @Data
