@@ -179,38 +179,48 @@ public class WebVerticle extends AbstractVerticle {
 
             log.info("遍历当前循环的路由列表中的每一个路由，并添加处理器");
             routes.forEach(route -> {
-                log.info("给路由添加predicater的处理器");
-                route.handler(ctx -> {
-                    log.debug("进入predicate判断");
-                    // 外循环是and判断(全部条件都为true才为true)，所以没有断言时，默认为true
-                    boolean andResult = true;
-                    if (gatexRouteConfig.getPredicates() != null) {
-                        for (final Map<String, Object> gatexPredicateConfig : gatexRouteConfig.getPredicates()) {
-                            // 内循环是or判断(只要有一个条件为true就为true)
-                            boolean orResult = false;
-                            for (final Map.Entry<String, Object> entry : gatexPredicateConfig.entrySet()) {
-                                final GatexPredicater gatexPredicate = this._predicaters.get(entry.getKey());
-                                if (gatexPredicate.test(ctx, entry.getValue())) {
-                                    orResult = true;
-                                    break;
-                                }
-                            }
-                            if (!orResult) {
-                                andResult = false;
-                                break;
-                            }
-                        }
-                    }
-                    if (andResult) {
-                        ctx.next();
-                    } else {
-                        ctx.end();
-                    }
-                });
+                if (gatexRouteConfig.getPredicates() != null) {
+                    addMatchHandler(gatexRouteConfig.getPredicates(), route);
+                }
                 route.handler(ProxyHandler.create(httpProxy));
             });
 
         }
+    }
+
+    /**
+     * 添加匹配的处理器
+     *
+     * @param gatexRouteConfig
+     * @param route            要添加处理器的路由
+     */
+    private void addMatchHandler(final Map<String, Object>[] predicates, final Route route) {
+        log.info("给路由添加predicater的处理器");
+        route.handler(ctx -> {
+            log.debug("进入predicate判断");
+            // 外循环是and判断(全部条件都为true才为true)，所以没有断言时，默认为true
+            boolean andResult = true;
+            for (final Map<String, Object> gatexPredicateConfig : predicates) {
+                // 内循环是or判断(只要有一个条件为true就为true)
+                boolean orResult = false;
+                for (final Map.Entry<String, Object> entry : gatexPredicateConfig.entrySet()) {
+                    final GatexPredicater gatexPredicate = this._predicaters.get(entry.getKey());
+                    if (gatexPredicate.test(ctx, entry.getValue())) {
+                        orResult = true;
+                        break;
+                    }
+                }
+                if (!orResult) {
+                    andResult = false;
+                    break;
+                }
+            }
+            if (andResult) {
+                ctx.next();
+            } else {
+                ctx.end();
+            }
+        });
     }
 
     /**
