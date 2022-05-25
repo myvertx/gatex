@@ -1,0 +1,14 @@
+<assembly xmlns="http://maven.apache.org/ASSEMBLY/2.1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/ASSEMBLY/2.1.0 http://maven.apache.org/xsd/assembly-2.1.0.xsd">
+	<dependencySets>
+		<dependencySet>
+			<excludes>
+				<exclude>io.vertx:vertx-config</exclude>
+				<exclude>io.vertx:vertx-json-schema</exclude>
+				<exclude>com.fasterxml.jackson.module:vertxjackson-datatype-jsr310</exclude>
+				<exclude>org.apache.commons:commons-lang3</exclude>
+				<exclude>org.apache.logging.log4j:log4j-slf4j-impl</exclude>
+			</excludes>
+		</dependencySet>
+	</dependencySets>
+</assembly>
