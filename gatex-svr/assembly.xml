@@ -1,0 +1,36 @@
+<assembly xmlns="http://maven.apache.org/ASSEMBLY/2.1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/ASSEMBLY/2.1.0 http://maven.apache.org/xsd/assembly-2.1.0.xsd">
+	<id>jar-with-dependencies</id>
+	<formats>
+		<format>jar</format>
+	</formats>
+	<!-- 文件直接从根路径开始存放，而不是放在一个基础路径下 -->
+	<includeBaseDirectory>false</includeBaseDirectory>
+	<dependencySets>
+		<dependencySet>
+			<!-- 依赖包解压出来再打包，而不是直接把jar包放进去 -->
+			<unpack>true</unpack>
+			<unpackOptions>
+				<excludes>
+					<!-- 排队资源文件 -->
+					<exclude>conf/</exclude>
+					<exclude>log4j2.component.properties</exclude>
+				</excludes>
+			</unpackOptions>
+			<excludes>
+				<exclude>io.vertx:vertx-auth-common</exclude>
+				<exclude>io.vertx:vertx-bridge-common</exclude>
+				<exclude>io.vertx:vertx-config</exclude>
+				<exclude>io.vertx:vertx-core</exclude>
+				<exclude>io.vertx:vertx-json-schema</exclude>
+				<exclude>io.vertx:vertx-web</exclude>
+				<exclude>io.vertx:vertx-web-common</exclude>
+				<exclude>io.netty:*</exclude>
+				<exclude>org.slf4j:*</exclude>
+				<exclude>com.fasterxml.jackson.*:*</exclude>
+				<exclude>org.apache.commons:commons-lang3</exclude>
+				<exclude>org.apache.logging.log4j:*</exclude>
+			</excludes>
+		</dependencySet>
+	</dependencySets>
+</assembly>
