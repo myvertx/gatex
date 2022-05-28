@@ -10,15 +10,6 @@
 
 	<artifactId>gatex-svr</artifactId>
 
-	<properties>
-		<main.verticle>myvertx.gatex.verticle.MainVerticle</main.verticle>
-		<launcher.class>io.vertx.core.Launcher</launcher.class>
-
-		<maven-compiler-plugin.version>3.10.1</maven-compiler-plugin.version>
-		<mapstruct.version>1.4.2.Final</mapstruct.version>
-		<lombok.version>1.18.24</lombok.version>
-	</properties>
-
 	<dependencies>
 		<dependency>
 			<groupId>myvertx.gatex</groupId>
