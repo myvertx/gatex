@@ -15,6 +15,10 @@
 			<groupId>myvertx.gatex</groupId>
 			<artifactId>gatex-api</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>com.github.rebue.wheel</groupId>
+			<artifactId>wheel-vertx</artifactId>
+		</dependency>
 
 		<dependency>
 			<groupId>io.vertx</groupId>
@@ -37,6 +41,12 @@
 			<groupId>io.vertx</groupId>
 			<artifactId>vertx-junit5</artifactId>
 			<scope>test</scope>
+		</dependency>
+
+		<!--依赖注入-->
+		<dependency>
+			<groupId>com.google.inject</groupId>
+			<artifactId>guice</artifactId>
 		</dependency>
 
 		<dependency>
