@@ -115,23 +115,28 @@ public class WebVerticle extends AbstractWebVerticle {
             // 创建Http代理
             final HttpProxy         httpProxy         = HttpProxy.reverseProxy(proxyClient)
                     .origin(dst.getPort(), dst.getHost());
-            if (StringUtils.isNotBlank(dst.getPath())) {
-                log.info("配置了routes[].dst.path，在请求拦截器中将其添加到请求路径的前面做为前缀");
-                httpProxy.addInterceptor(new ProxyInterceptor() {
-                    @Override
-                    public Future<ProxyResponse> handleProxyRequest(final ProxyContext context) {
-                        log.debug("context.request().getURI()", context.request().getURI());
-                        context.request().setURI(dst.getPath().trim() + context.request().getURI());
-                        // 继续拦截链
-                        return context.sendRequest();
+            httpProxy.addInterceptor(new ProxyInterceptor() {
+                @Override
+                public Future<ProxyResponse> handleProxyRequest(final ProxyContext ctx) {
+                    final String path = ctx.get("path", String.class);
+                    if (StringUtils.isNoneBlank(path)) {
+                        ctx.request().setURI(dst.getPath().trim() + ctx.request().getURI());
                     }
-                });
-            }
+                    // 继续拦截链
+                    return ctx.sendRequest();
+                }
+            });
 
             log.info("遍历当前循环的路由列表中的每一个路由，并添加处理器");
             routes.forEach(route -> {
                 if (gatexRouteConfig.getPredicates() != null) {
                     addMatchHandler(gatexRouteConfig.getPredicates(), route);
+                }
+                if (StringUtils.isNotBlank(dst.getPath())) {
+                    log.info("配置了routes[].dst.path: {}，在请求拦截器中将其添加到请求路径的前面做为前缀", dst.getPath());
+                    route.handler(ctx -> {
+                        ctx.put("path", dst.getPath());
+                    });
                 }
                 route.handler(ProxyHandler.create(httpProxy));
             });
