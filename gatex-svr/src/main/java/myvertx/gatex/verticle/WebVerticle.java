@@ -134,9 +134,7 @@ public class WebVerticle extends AbstractWebVerticle {
                 }
                 if (StringUtils.isNotBlank(dst.getPath())) {
                     log.info("配置了routes[].dst.path: {}，在请求拦截器中将其添加到请求路径的前面做为前缀", dst.getPath());
-                    route.handler(ctx -> {
-                        ctx.put("path", dst.getPath());
-                    });
+                    route.handler(ctx -> ctx.put("path", dst.getPath()));
                 }
                 route.handler(ProxyHandler.create(httpProxy));
             });
