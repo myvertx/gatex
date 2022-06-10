@@ -87,6 +87,7 @@ public class WebVerticle extends AbstractWebVerticle {
                 log.debug("读取routes[].src.matchers");
                 final Map<String, Object> matchers = gatexRouteConfig.getSrc().getMatchers();
                 if (matchers != null) {
+                    log.debug("添加匹配器");
                     matchers.entrySet().forEach(entry -> {
                         final GatexMatcher gatexMatcher = this._matchers.get(entry.getKey());
                         routes.forEach(route -> {
@@ -130,7 +131,7 @@ public class WebVerticle extends AbstractWebVerticle {
             log.info("遍历当前循环的路由列表中的每一个路由，并添加处理器");
             routes.forEach(route -> {
                 if (gatexRouteConfig.getPredicates() != null) {
-                    addMatchHandler(gatexRouteConfig.getPredicates(), route);
+                    addPredicateHandler(gatexRouteConfig.getPredicates(), route);
                 }
                 if (StringUtils.isNotBlank(dst.getPath())) {
                     log.info("配置了routes[].dst.path: {}，在请求拦截器中将其添加到请求路径的前面做为前缀", dst.getPath());
@@ -143,12 +144,12 @@ public class WebVerticle extends AbstractWebVerticle {
     }
 
     /**
-     * 添加匹配的处理器
+     * 添加断言的处理器
      *
-     * @param gatexRouteConfig
-     * @param route            要添加处理器的路由
+     * @param predicates 断言列表
+     * @param route      要添加处理器的路由
      */
-    private void addMatchHandler(final Map<String, Object>[] predicates, final Route route) {
+    private void addPredicateHandler(final Map<String, Object>[] predicates, final Route route) {
         log.info("给路由添加predicater的处理器");
         route.handler(ctx -> {
             log.debug("进入predicate判断");
