@@ -18,6 +18,7 @@ import io.vertx.core.impl.Arguments;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Route;
 import io.vertx.ext.web.Router;
+import io.vertx.ext.web.handler.StaticHandler;
 import io.vertx.ext.web.proxy.handler.ProxyHandler;
 import io.vertx.httpproxy.HttpProxy;
 import io.vertx.httpproxy.ProxyContext;
@@ -106,39 +107,56 @@ public class WebVerticle extends AbstractWebVerticle {
             final Dst dst = gatexRouteConfig.getDst();
             Arguments.require(dst != null, "routes[].dst不能为null");
             Arguments.require(dst.getHost() != null, "routes[].dst.host不能为null");
-            Arguments.require(dst.getPort() != null, "routes[].dst.port不能为null");
 
-            // 获取HttpClientOptions
-            final HttpClientOptions httpClientOptions = dst.getClient() == null ? new HttpClientOptions()
-                    : new HttpClientOptions(JsonObject.mapFrom(dst.getClient()));
-            // 创建httpClient
-            final HttpClient        proxyClient       = this.vertx.createHttpClient(httpClientOptions);
-            // 创建Http代理
-            final HttpProxy         httpProxy         = HttpProxy.reverseProxy(proxyClient)
-                    .origin(dst.getPort(), dst.getHost());
-            httpProxy.addInterceptor(new ProxyInterceptor() {
-                @Override
-                public Future<ProxyResponse> handleProxyRequest(final ProxyContext ctx) {
-                    final String path = ctx.get("path", String.class);
-                    if (StringUtils.isNoneBlank(path)) {
-                        ctx.request().setURI(dst.getPath().trim() + ctx.request().getURI());
+            if ("static".equalsIgnoreCase(dst.getHost())) {
+                log.info("静态资源类的路由");
+                log.info("遍历当前循环的路由列表中的每一个路由，并添加静态处理器");
+                routes.forEach(route -> {
+                    if (gatexRouteConfig.getPredicates() != null) {
+                        // 添加断言处理器
+                        addPredicateHandler(gatexRouteConfig.getPredicates(), route);
                     }
-                    // 继续拦截链
-                    return ctx.sendRequest();
-                }
-            });
+                    final String routePath = route.getPath();
+                    log.info("路由的path: {}", routePath);
+                    route.handler(StaticHandler.create("webroot/" + routePath));
+                });
+            } else {
+                log.info("代理类的路由");
+                Arguments.require(dst.getPort() != null, "routes[].dst.port不能为null");
 
-            log.info("遍历当前循环的路由列表中的每一个路由，并添加处理器");
-            routes.forEach(route -> {
-                if (gatexRouteConfig.getPredicates() != null) {
-                    addPredicateHandler(gatexRouteConfig.getPredicates(), route);
-                }
-                if (StringUtils.isNotBlank(dst.getPath())) {
-                    log.info("配置了routes[].dst.path: {}，在请求拦截器中将其添加到请求路径的前面做为前缀", dst.getPath());
-                    route.handler(ctx -> ctx.put("path", dst.getPath()));
-                }
-                route.handler(ProxyHandler.create(httpProxy));
-            });
+                // 获取HttpClientOptions
+                final HttpClientOptions httpClientOptions = dst.getClient() == null ? new HttpClientOptions()
+                        : new HttpClientOptions(JsonObject.mapFrom(dst.getClient()));
+                // 创建httpClient
+                final HttpClient        proxyClient       = this.vertx.createHttpClient(httpClientOptions);
+                // 创建Http代理
+                final HttpProxy         httpProxy         = HttpProxy.reverseProxy(proxyClient)
+                        .origin(dst.getPort(), dst.getHost());
+                httpProxy.addInterceptor(new ProxyInterceptor() {
+                    @Override
+                    public Future<ProxyResponse> handleProxyRequest(final ProxyContext ctx) {
+                        final String path = ctx.get("path", String.class);
+                        if (StringUtils.isNoneBlank(path)) {
+                            ctx.request().setURI(dst.getPath().trim() + ctx.request().getURI());
+                        }
+                        // 继续拦截链
+                        return ctx.sendRequest();
+                    }
+                });
+
+                log.info("遍历当前循环的路由列表中的每一个路由，并添加代理处理器");
+                routes.forEach(route -> {
+                    if (gatexRouteConfig.getPredicates() != null) {
+                        // 添加断言处理器
+                        addPredicateHandler(gatexRouteConfig.getPredicates(), route);
+                    }
+                    if (StringUtils.isNotBlank(dst.getPath())) {
+                        log.info("配置了routes[].dst.path: {}，在请求拦截器中将其添加到请求路径的前面做为前缀", dst.getPath());
+                        route.handler(ctx -> ctx.put("path", dst.getPath()));
+                    }
+                    route.handler(ProxyHandler.create(httpProxy));
+                });
+            }
 
         }
     }
