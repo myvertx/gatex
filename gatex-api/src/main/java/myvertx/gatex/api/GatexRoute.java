@@ -56,6 +56,16 @@ public class GatexRoute {
          * httpClientOptions
          */
         private Map<String, Object> client;
+
+        /**
+         * 前置过滤器
+         */
+        private Map<String, Object> preFilters;
+
+        /**
+         * 后置过滤器
+         */
+        private Map<String, Object> postFilters;
     }
 
 }

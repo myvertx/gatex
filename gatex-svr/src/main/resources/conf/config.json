@@ -1,41 +1,54 @@
 {
-	"main": {
-		"routes": [
-			{
-				"src": {
-					"path": "/captcha/*"
-				},
-				"dst": {
-					"host": "127.0.0.1",
-					"port": 9000,
-					"client": {
-						"logActivity": true
-					}
-				}
-			},
-			{
-				"src": {
-					"regexPath": "^/b02/.*"
-				},
-				"dst": {
-					"host": "127.0.0.1",
-					"port": 9202,
-					"client": {
-						"logActivity": true
-					}
-				}
-			}
-		]
-	},
-	"web": {
-		"instances": 3,
-		"config": {
-			"isLogging": true,
-			"isCors": true,
-			"server": {
-				"port": 8090,
-				"logActivity": true
-			}
-		}
-	}
+    "main": {
+        "routes": [
+            {
+                "src": {
+                    "path": "/captcha/*"
+                },
+                "dst": {
+                    "host": "127.0.0.1",
+                    "port": 9000,
+                    "client": {
+                        "logActivity": true
+                    }
+                }
+            },
+            {
+                "src": {
+                    "regexPath": "^/c02/.*"
+                },
+                "dst": {
+                    "host": "127.0.0.1",
+                    "port": 9302,
+                    "client": {
+                        "logActivity": true
+                    }
+                }
+            },
+            {
+                "src": {
+                    "path": "/redisweb/*"
+                },
+                "dst": {
+                    "host": "127.0.0.1",
+                    "port": 15080,
+                    "path": "/redisweb",
+                    "client": {
+                        "logActivity": true
+                    }
+                }
+            }
+        ]
+    },
+    "web": {
+        "instances": 3,
+        "config": {
+            "isLogging": true,
+            "isCors": true,
+            "server": {
+                "port": 8090,
+                "logActivity": true
+            }
+        }
+    }
 }

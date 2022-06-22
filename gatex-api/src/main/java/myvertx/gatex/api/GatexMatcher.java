@@ -8,6 +8,10 @@ import io.vertx.ext.web.Route;
  * @author zbz
  */
 public interface GatexMatcher {
+
+    /**
+     * @return 匹配器的名称
+     */
     String name();
 
     /**

@@ -1,15 +1,5 @@
 package myvertx.gatex.verticle;
 
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.ServiceLoader;
-
-import javax.inject.Inject;
-
-import org.apache.commons.lang3.StringUtils;
-
 import io.vertx.core.Future;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpClientOptions;
@@ -25,21 +15,28 @@ import io.vertx.httpproxy.ProxyContext;
 import io.vertx.httpproxy.ProxyInterceptor;
 import io.vertx.httpproxy.ProxyResponse;
 import lombok.extern.slf4j.Slf4j;
+import myvertx.gatex.api.GatexFilterFactory;
 import myvertx.gatex.api.GatexMatcher;
 import myvertx.gatex.api.GatexPredicater;
 import myvertx.gatex.api.GatexRoute;
 import myvertx.gatex.api.GatexRoute.Dst;
 import myvertx.gatex.config.MainProperties;
+import org.apache.commons.lang3.StringUtils;
 import rebue.wheel.vertx.verticle.AbstractWebVerticle;
+
+import javax.inject.Inject;
+import java.util.*;
 
 @Slf4j
 public class WebVerticle extends AbstractWebVerticle {
     @Inject
-    private MainProperties               mainProperties;
+    private MainProperties mainProperties;
 
     private Map<String, GatexPredicater> _predicaters = new HashMap<>();
 
-    private Map<String, GatexMatcher>    _matchers    = new HashMap<>();;
+    private Map<String, GatexMatcher> _matchers = new HashMap<>();
+
+    private Map<String, GatexFilterFactory> _filterFactories = new HashMap<>();
 
     /**
      * 根据配置中的路由列表来配置路由
@@ -53,6 +50,10 @@ public class WebVerticle extends AbstractWebVerticle {
         log.info("注册predicater");
         final ServiceLoader<GatexPredicater> predicaterServiceLoader = ServiceLoader.load(GatexPredicater.class);
         predicaterServiceLoader.forEach(predicater -> this._predicaters.put(predicater.name(), predicater));
+
+        log.info("注册过滤器工厂");
+        final ServiceLoader<GatexFilterFactory> filterFactoryServiceLoader = ServiceLoader.load(GatexFilterFactory.class);
+        filterFactoryServiceLoader.forEach(filterFactory -> this._filterFactories.put(filterFactory.name(), filterFactory));
 
         log.info("根据配置中的路由列表来配置路由");
         for (final GatexRoute gatexRouteConfig : this.mainProperties.getRoutes()) {
@@ -109,56 +110,88 @@ public class WebVerticle extends AbstractWebVerticle {
             Arguments.require(dst.getHost() != null, "routes[].dst.host不能为null");
 
             if ("static".equalsIgnoreCase(dst.getHost())) {
-                log.info("静态资源类的路由");
-                log.info("遍历当前循环的路由列表中的每一个路由，并添加静态处理器");
-                routes.forEach(route -> {
-                    if (gatexRouteConfig.getPredicates() != null) {
-                        // 添加断言处理器
-                        addPredicateHandler(gatexRouteConfig.getPredicates(), route);
-                    }
-                    final String routePath = route.getPath();
-                    log.info("路由的path: {}", routePath);
-                    route.handler(StaticHandler.create("webroot/" + routePath));
-                });
-            } else {
-                log.info("代理类的路由");
-                Arguments.require(dst.getPort() != null, "routes[].dst.port不能为null");
-
-                // 获取HttpClientOptions
-                final HttpClientOptions httpClientOptions = dst.getClient() == null ? new HttpClientOptions()
-                        : new HttpClientOptions(JsonObject.mapFrom(dst.getClient()));
-                // 创建httpClient
-                final HttpClient        proxyClient       = this.vertx.createHttpClient(httpClientOptions);
-                // 创建Http代理
-                final HttpProxy         httpProxy         = HttpProxy.reverseProxy(proxyClient)
-                        .origin(dst.getPort(), dst.getHost());
-                httpProxy.addInterceptor(new ProxyInterceptor() {
-                    @Override
-                    public Future<ProxyResponse> handleProxyRequest(final ProxyContext ctx) {
-                        final String path = ctx.get("path", String.class);
-                        if (StringUtils.isNoneBlank(path)) {
-                            ctx.request().setURI(dst.getPath().trim() + ctx.request().getURI());
-                        }
-                        // 继续拦截链
-                        return ctx.sendRequest();
-                    }
-                });
-
-                log.info("遍历当前循环的路由列表中的每一个路由，并添加代理处理器");
-                routes.forEach(route -> {
-                    if (gatexRouteConfig.getPredicates() != null) {
-                        // 添加断言处理器
-                        addPredicateHandler(gatexRouteConfig.getPredicates(), route);
-                    }
-                    if (StringUtils.isNotBlank(dst.getPath())) {
-                        log.info("配置了routes[].dst.path: {}，在请求拦截器中将其添加到请求路径的前面做为前缀", dst.getPath());
-                        route.handler(ctx -> ctx.put("path", dst.getPath()));
-                    }
-                    route.handler(ProxyHandler.create(httpProxy));
-                });
+                // 配置静态资源类的路由
+                configStaticRoutes(gatexRouteConfig, routes);
+            }
+            // 代理路由
+            else {
+                configProxyRoute(gatexRouteConfig, routes, dst);
             }
 
         }
+    }
+
+    /**
+     * 配置静态资源类的路由
+     *
+     * @param gatexRouteConfig 路由配置
+     * @param routes           要配置的路由列表
+     */
+    private void configStaticRoutes(final GatexRoute gatexRouteConfig, final List<Route> routes) {
+        log.info("配置静态资源类的路由");
+        log.info("遍历当前循环的路由列表中的每一个路由，并添加静态处理器");
+        routes.forEach(route -> {
+            if (gatexRouteConfig.getPredicates() != null) {
+                // 添加断言处理器
+                addPredicateHandler(gatexRouteConfig.getPredicates(), route);
+            }
+
+            // 设置静态路由
+            final String routePath = route.getPath();
+            log.info("路由的path: {}", routePath);
+            route.handler(StaticHandler.create("webroot/" + routePath));
+        });
+    }
+
+    /**
+     * 配置代理类的路由
+     *
+     * @param gatexRouteConfig 配置
+     * @param routes           路由列表
+     * @param dst              路由目的地
+     */
+    private void configProxyRoute(final GatexRoute gatexRouteConfig, final List<Route> routes, final Dst dst) {
+        log.info("配置代理类的路由");
+        Arguments.require(dst.getPort() != null, "routes[].dst.port不能为null");
+
+        // 获取HttpClientOptions
+        final HttpClientOptions httpClientOptions = dst.getClient() == null ? new HttpClientOptions()
+            : new HttpClientOptions(JsonObject.mapFrom(dst.getClient()));
+        // 创建httpClient
+        final HttpClient httpClient = this.vertx.createHttpClient(httpClientOptions);
+        // 创建Http代理
+        final HttpProxy httpProxy = HttpProxy.reverseProxy(httpClient)
+            .origin(dst.getPort(), dst.getHost());
+
+        if (StringUtils.isNotBlank(dst.getPath())) {
+            String path = dst.getPath().trim();
+            log.info("配置了routes[].dst.path: {}，在请求拦截器中将其添加到请求路径的前面做为前缀", path);
+            httpProxy.addInterceptor(new ProxyInterceptor() {
+                @Override
+                public Future<ProxyResponse> handleProxyRequest(final ProxyContext ctx) {
+                    log.debug("给请求链接添加前缀: {}", path);
+                    ctx.request().setURI(path + ctx.request().getURI());
+                    // 继续拦截链
+                    return ctx.sendRequest();
+                }
+            });
+        }
+
+
+        log.info("遍历当前循环的路由列表中的每一个路由，并添加代理处理器");
+        routes.forEach(route -> {
+            if (gatexRouteConfig.getPredicates() != null) {
+                // 添加断言处理器
+                addPredicateHandler(gatexRouteConfig.getPredicates(), route);
+            }
+
+            // 添加前置过滤器
+            addPreFilters(route, dst);
+            // 设置代理路由
+            route.handler(ProxyHandler.create(httpProxy));
+            // 添加后置过滤器
+            addPostFilters(route, dst);
+        });
     }
 
     /**
@@ -207,8 +240,8 @@ public class WebVerticle extends AbstractWebVerticle {
     private void addRoute(final Router router, final List<Route> routes, String pathStr, final boolean isRegex) {
         String[] methods = null;
         if (pathStr.startsWith("[")) {
-            final String[] pathSplit  = pathStr.split("]");
-            final String   methodsStr = pathSplit[0];
+            final String[] pathSplit = pathStr.split("]");
+            final String methodsStr = pathSplit[0];
             methods = methodsStr.split(",");
             pathStr = pathSplit[1];
         }
@@ -219,6 +252,38 @@ public class WebVerticle extends AbstractWebVerticle {
             }
         }
         routes.add(route);
+    }
+
+    /**
+     * 添加前置过滤器
+     *
+     * @param route 路由
+     * @param dst
+     */
+    private void addPreFilters(final Route route, final Dst dst) {
+        final Map<String, Object> filters = dst.getPreFilters();
+        if (filters != null) {
+            filters.entrySet().forEach(entry -> {
+                final GatexFilterFactory filterFactory = this._filterFactories.get(entry.getKey());
+                route.handler(filterFactory.create(entry.getValue()));
+            });
+        }
+    }
+
+    /**
+     * 添加后置过滤器
+     *
+     * @param route 路由
+     * @param dst
+     */
+    private void addPostFilters(final Route route, final Dst dst) {
+        final Map<String, Object> filters = dst.getPostFilters();
+        if (filters != null) {
+            filters.entrySet().forEach(entry -> {
+                final GatexFilterFactory filterFactory = this._filterFactories.get(entry.getKey());
+                route.handler(filterFactory.create(entry.getValue()));
+            });
+        }
     }
 
 }
