@@ -32,7 +32,10 @@
                 "dst": {
                     "host": "127.0.0.1",
                     "port": 15080,
-                    "path": "/redisweb",
+                    "proxyInterceptors": [
+                        "pathPrefix=/redisweb",
+                        "patchHtmlPathPrefix"
+                    ],
                     "client": {
                         "logActivity": true
                     }

@@ -18,8 +18,8 @@ public interface GatexFilterFactory {
     /**
      * 创建过滤器
      *
-     * @param filterParam 创建过滤器的参数
+     * @param options 创建过滤器的参数
      */
-    Handler<RoutingContext> create(Object filterParam);
+    Handler<RoutingContext> create(Object options);
 
 }
