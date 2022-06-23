@@ -61,6 +61,8 @@ public class PatchHtmlPathPrefixProxyInterceptorFactory implements GatexProxyInt
                     final BufferingWriteStream buffer = new BufferingWriteStream();
                     return body.stream().pipeTo(buffer).compose(v -> {
                         String content = buffer.content().toString();
+                        content = content.replaceAll(" href=\"/", " href=\"");
+                        content = content.replaceAll(" src=\"/", " src=\"");
                         content = content.replaceAll(" href=\"", " href=\"" + pathPrefix);
                         content = content.replaceAll(" src=\"", " src=\"" + pathPrefix);
                         // 重新设置body
