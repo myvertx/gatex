@@ -1,2 +1,3 @@
 myvertx.gatex.factory.PathPrefixProxyInterceptorFactory
 myvertx.gatex.factory.PatchHtmlPathPrefixProxyInterceptorFactory
+myvertx.gatex.factory.PatchHtmlBaseProxyInterceptorFactory

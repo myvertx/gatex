@@ -36,7 +36,7 @@
 						"logActivity": true
 					},
 					"proxyInterceptors": [
-						"patchHtmlPathPrefix=/redisweb/"
+						"patchHtmlBase=/redisweb/"
 					]
 				}
 			}
