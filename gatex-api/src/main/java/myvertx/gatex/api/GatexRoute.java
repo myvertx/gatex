@@ -50,10 +50,6 @@ public class GatexRoute {
          */
         private Integer             port;
         /**
-         * 目的地路径的前缀
-         */
-        private String              path;
-        /**
          * httpClientOptions
          */
         private Map<String, Object> client;

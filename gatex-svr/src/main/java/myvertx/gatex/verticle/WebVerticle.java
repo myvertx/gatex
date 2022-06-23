@@ -10,7 +10,7 @@ import javax.inject.Inject;
 
 import org.apache.commons.lang3.StringUtils;
 
-import io.vertx.core.Future;
+import io.vertx.core.Handler;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpClientOptions;
 import io.vertx.core.http.HttpMethod;
@@ -18,12 +18,11 @@ import io.vertx.core.impl.Arguments;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Route;
 import io.vertx.ext.web.Router;
+import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.StaticHandler;
 import io.vertx.ext.web.proxy.handler.ProxyHandler;
 import io.vertx.httpproxy.HttpProxy;
-import io.vertx.httpproxy.ProxyContext;
 import io.vertx.httpproxy.ProxyInterceptor;
-import io.vertx.httpproxy.ProxyResponse;
 import lombok.extern.slf4j.Slf4j;
 import myvertx.gatex.api.GatexFilterFactory;
 import myvertx.gatex.api.GatexMatcher;
@@ -144,10 +143,8 @@ public class WebVerticle extends AbstractWebVerticle {
         log.info("配置静态资源类的路由");
         log.info("遍历当前循环的路由列表中的每一个路由，并添加静态处理器");
         routes.forEach(route -> {
-            if (gatexRouteConfig.getPredicates() != null) {
-                // 添加断言处理器
-                addPredicateHandler(gatexRouteConfig.getPredicates(), route);
-            }
+            // 添加断言处理器
+            addPredicateHandler(route, gatexRouteConfig.getPredicates());
 
             // 设置静态路由
             final String routePath = route.getPath();
@@ -179,69 +176,16 @@ public class WebVerticle extends AbstractWebVerticle {
         // 添加代理拦截器
         addProxyInterceptors(httpProxy, dst.getProxyInterceptors());
 
-        // 判断是否配置了给URI添加前缀
-        if (StringUtils.isNotBlank(dst.getPath())) {
-            final String path = dst.getPath().trim();
-            log.info("配置了routes[].dst.path: {}，在请求拦截器中将其添加到请求路径的前面做为前缀", path);
-            httpProxy.addInterceptor(new ProxyInterceptor() {
-                @Override
-                public Future<ProxyResponse> handleProxyRequest(final ProxyContext ctx) {
-                    log.debug("给请求链接添加前缀: {}", path);
-                    ctx.request().setURI(path + ctx.request().getURI());
-                    // 继续拦截链
-                    return ctx.sendRequest();
-                }
-            });
-        }
-
         log.info("遍历当前循环的路由列表中的每一个路由，并添加代理处理器");
         routes.forEach(route -> {
-            if (gatexRouteConfig.getPredicates() != null) {
-                // 添加断言处理器
-                addPredicateHandler(gatexRouteConfig.getPredicates(), route);
-            }
-
+            // 添加断言处理器
+            addPredicateHandler(route, gatexRouteConfig.getPredicates());
             // 添加前置过滤器
             addFilters(route, dst.getPreFilters());
             // 设置代理路由
             route.handler(ProxyHandler.create(httpProxy));
             // 添加后置过滤器
             addFilters(route, dst.getPostFilters());
-        });
-    }
-
-    /**
-     * 添加断言的处理器
-     *
-     * @param predicates 断言列表
-     * @param route      要添加处理器的路由
-     */
-    private void addPredicateHandler(final Map<String, Object>[] predicates, final Route route) {
-        log.info("给路由添加predicater的处理器");
-        route.handler(ctx -> {
-            log.debug("进入predicate判断");
-            // 外循环是and判断(全部条件都为true才为true)，所以没有断言时，默认为true
-            boolean andResult = true;
-            for (final Map<String, Object> gatexPredicateConfig : predicates) {
-                // 内循环是or判断(只要有一个条件为true就为true)
-                boolean orResult = false;
-                for (final Map.Entry<String, Object> entry : gatexPredicateConfig.entrySet()) {
-                    final GatexPredicater gatexPredicate = this._predicaters.get(entry.getKey());
-                    if (gatexPredicate.test(ctx, entry.getValue())) {
-                        orResult = true;
-                        break;
-                    }
-                }
-                if (!orResult) {
-                    andResult = false;
-                    break;
-                }
-            }
-            if (andResult) {
-                ctx.next();
-            } else {
-                ctx.end();
-            }
         });
     }
 
@@ -271,6 +215,43 @@ public class WebVerticle extends AbstractWebVerticle {
     }
 
     /**
+     * 添加断言的处理器
+     *
+     * @param route      要添加处理器的路由
+     * @param predicates 断言列表
+     */
+    private void addPredicateHandler(final Route route, final Map<String, Object>[] predicates) {
+        log.info("给路由添加predicater的处理器");
+        if (predicates != null) {
+            route.handler(ctx -> {
+                log.debug("进入predicate判断");
+                // 外循环是and判断(全部条件都为true才为true)，所以没有断言时，默认为true
+                boolean andResult = true;
+                for (final Map<String, Object> gatexPredicateConfig : predicates) {
+                    // 内循环是or判断(只要有一个条件为true就为true)
+                    boolean orResult = false;
+                    for (final Map.Entry<String, Object> entry : gatexPredicateConfig.entrySet()) {
+                        final GatexPredicater gatexPredicate = this._predicaters.get(entry.getKey());
+                        if (gatexPredicate.test(ctx, entry.getValue())) {
+                            orResult = true;
+                            break;
+                        }
+                    }
+                    if (!orResult) {
+                        andResult = false;
+                        break;
+                    }
+                }
+                if (andResult) {
+                    ctx.next();
+                } else {
+                    ctx.end();
+                }
+            });
+        }
+    }
+
+    /**
      * 添加代理拦截器
      *
      * @param httpProxy         Http客户端代理
@@ -297,7 +278,11 @@ public class WebVerticle extends AbstractWebVerticle {
                 if (factory == null) {
                     throw new IllegalArgumentException("找不到名称为" + name + "的代理拦截器");
                 }
-                httpProxy.addInterceptor(factory.create(options));
+                final ProxyInterceptor proxyInterceptor = factory.create(options);
+                if (proxyInterceptor == null) {
+                    return;
+                }
+                httpProxy.addInterceptor(proxyInterceptor);
             });
         }
     }
@@ -315,7 +300,11 @@ public class WebVerticle extends AbstractWebVerticle {
                 if (factory == null) {
                     throw new IllegalArgumentException("找不到名称为" + entry.getKey() + "的过滤器");
                 }
-                route.handler(factory.create(entry.getValue()));
+                final Handler<RoutingContext> handler = factory.create(entry.getValue());
+                if (handler == null) {
+                    return;
+                }
+                route.handler(handler);
             });
         }
     }
