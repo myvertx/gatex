@@ -33,7 +33,7 @@ public class PathPrefixProxyInterceptorFactory implements GatexProxyInterceptorF
         return new ProxyInterceptor() {
             @Override
             public Future<ProxyResponse> handleProxyRequest(final ProxyContext proxyContext) {
-                log.debug("handleProxyRequest: {}", proxyContext);
+                log.debug("pathPrefix.handleProxyRequest: {}", proxyContext);
 
                 log.debug("给请求链接添加前缀: {}", pathPrefix);
                 proxyContext.request().setURI(pathPrefix + proxyContext.request().getURI());
