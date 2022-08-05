@@ -3,7 +3,7 @@
 	<parent>
 		<groupId>myvertx.gatex</groupId>
 		<artifactId>gatex</artifactId>
-		<version>1.0.7</version>
+		<version>1.0.8</version>
 	</parent>
 	<artifactId>gatex-api</artifactId>
 

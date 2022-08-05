@@ -27,6 +27,18 @@
 			},
 			{
 				"src": {
+					"regexPath": "^/bank/api/v2/.*"
+				},
+				"dst": {
+					"host": "127.0.0.1",
+					"port": 9302,
+					"client": {
+						"logActivity": true
+					}
+				}
+			},
+			{
+				"src": {
 					"path": "/redisweb/*"
 				},
 				"dst": {
