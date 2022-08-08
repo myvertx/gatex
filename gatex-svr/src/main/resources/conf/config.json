@@ -60,7 +60,6 @@
 			"isLogging": true,
 			"isResponseTime": true,
 			"timeout": 5000,
-			"isCors": true,
 			"server": {
 				"port": 8090,
 				"logActivity": true
