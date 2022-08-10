@@ -27,7 +27,10 @@
 				<exclude>io.vertx:vertx-web-common</exclude>
 				<exclude>io.netty:*</exclude>
 				<exclude>org.slf4j:*</exclude>
-				<exclude>com.fasterxml.jackson.*:*</exclude>
+				<exclude>com.fasterxml.jackson.core:*</exclude>
+				<exclude>com.fasterxml.jackson.anntation:*</exclude>
+				<exclude>com.fasterxml.jackson.databind:*</exclude>
+				<exclude>com.fasterxml.jackson.datatype:jackson-datatype-jsr310</exclude>
 				<exclude>org.apache.commons:commons-lang3</exclude>
 				<exclude>org.apache.logging.log4j:*</exclude>
 			</excludes>
