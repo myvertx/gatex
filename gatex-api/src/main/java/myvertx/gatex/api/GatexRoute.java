@@ -11,17 +11,17 @@ public class GatexRoute {
     /**
      * 请求的来源
      */
-    private Src                   src;
+    private Src                 src;
 
     /**
      * 转发的目的地
      */
-    private Dst                   dst;
+    private Dst                 dst;
 
     /**
      * 断言列表
      */
-    private Map<String, Object>[] predicates;
+    private Map<String, Object> predicates;
 
     /**
      * 来源配置

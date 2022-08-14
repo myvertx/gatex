@@ -27,6 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 import myvertx.gatex.api.GatexFilterFactory;
 import myvertx.gatex.api.GatexMatcher;
 import myvertx.gatex.api.GatexPredicater;
+import myvertx.gatex.api.GatexPredicaterFactory;
 import myvertx.gatex.api.GatexProxyInterceptorFactory;
 import myvertx.gatex.api.GatexRoute;
 import myvertx.gatex.api.GatexRoute.Dst;
@@ -36,15 +37,15 @@ import rebue.wheel.vertx.verticle.AbstractWebVerticle;
 @Slf4j
 public class WebVerticle extends AbstractWebVerticle {
     @Inject
-    private MainProperties                            mainProperties;
+    private MainProperties                                  mainProperties;
 
-    private Map<String, GatexPredicater>              _predicaters               = new HashMap<>();
+    private final Map<String, GatexPredicaterFactory>       _predicaterFactories       = new HashMap<>();
 
-    private Map<String, GatexMatcher>                 _matchers                  = new HashMap<>();
+    private final Map<String, GatexMatcher>                 _matchers                  = new HashMap<>();
 
-    private Map<String, GatexFilterFactory>           _filterFactories           = new HashMap<>();
+    private final Map<String, GatexFilterFactory>           _filterFactories           = new HashMap<>();
 
-    private Map<String, GatexProxyInterceptorFactory> _proxyInterceptorFactories = new HashMap<>();
+    private final Map<String, GatexProxyInterceptorFactory> _proxyInterceptorFactories = new HashMap<>();
 
     /**
      * 根据配置中的路由列表来配置路由
@@ -55,9 +56,9 @@ public class WebVerticle extends AbstractWebVerticle {
         final ServiceLoader<GatexMatcher> matcherServiceLoader = ServiceLoader.load(GatexMatcher.class);
         matcherServiceLoader.forEach(matcher -> this._matchers.put(matcher.name(), matcher));
 
-        log.info("注册predicater");
-        final ServiceLoader<GatexPredicater> predicaterServiceLoader = ServiceLoader.load(GatexPredicater.class);
-        predicaterServiceLoader.forEach(predicater -> this._predicaters.put(predicater.name(), predicater));
+        log.info("注册断言器工厂");
+        final ServiceLoader<GatexPredicaterFactory> predicaterServiceLoader = ServiceLoader.load(GatexPredicaterFactory.class);
+        predicaterServiceLoader.forEach(factory -> this._predicaterFactories.put(factory.name(), factory));
 
         log.info("注册过滤器工厂");
         final ServiceLoader<GatexFilterFactory> filterFactoryServiceLoader = ServiceLoader.load(GatexFilterFactory.class);
@@ -222,35 +223,28 @@ public class WebVerticle extends AbstractWebVerticle {
      * @param route      要添加处理器的路由
      * @param predicates 断言列表
      */
-    private void addPredicateHandler(final Route route, final Map<String, Object>[] predicates) {
+    private void addPredicateHandler(final Route route, final Map<String, Object> predicates) {
         log.info("给路由添加predicater的处理器");
-        if (predicates != null) {
+        if (predicates == null || predicates.isEmpty()) {
+            return;
+        }
+
+        predicates.forEach((key, value) -> {
+            final GatexPredicaterFactory factory = this._predicaterFactories.get(key);
+            if (factory == null) {
+                throw new IllegalArgumentException("找不到名为" + key + "的断言工厂");
+            }
+            log.info("使用{}断言工厂创建断言", key);
+            final GatexPredicater predicater = factory.create(value);
             route.handler(ctx -> {
-                log.debug("进入predicate判断");
-                // 外循环是and判断(全部条件都为true才为true)，所以没有断言时，默认为true
-                boolean andResult = true;
-                for (final Map<String, Object> gatexPredicateConfig : predicates) {
-                    // 内循环是or判断(只要有一个条件为true就为true)
-                    boolean orResult = false;
-                    for (final Map.Entry<String, Object> entry : gatexPredicateConfig.entrySet()) {
-                        final GatexPredicater gatexPredicate = this._predicaters.get(entry.getKey());
-                        if (gatexPredicate.test(ctx, entry.getValue())) {
-                            orResult = true;
-                            break;
-                        }
-                    }
-                    if (!orResult) {
-                        andResult = false;
-                        break;
-                    }
-                }
-                if (andResult) {
+                log.debug("进入{}断言器判断", factory.name());
+                if (predicater.test(ctx)) {
                     ctx.next();
                 } else {
                     ctx.end();
                 }
             });
-        }
+        });
     }
 
     /**
@@ -264,16 +258,15 @@ public class WebVerticle extends AbstractWebVerticle {
             proxyInterceptors.forEach(item -> {
                 String name;
                 Object options = null;
-                if (item instanceof final String value) {
-                    final int index = value.indexOf('=');
-                    if (index == -1) {
-                        name = value;
-                    } else {
-                        name    = StringUtils.left(value, index);
-                        options = value.substring(index + 1);
-                    }
+                if (!(item instanceof final String value)) {
+                    throw new IllegalArgumentException("代理拦截器暂时只支持配置为String类型的值");
+                }
+                final int index = value.indexOf('=');
+                if (index == -1) {
+                    name = value;
                 } else {
-                    throw new IllegalArgumentException("暂时不支持配置不为String的代理拦截器");
+                    name    = StringUtils.left(value, index);
+                    options = value.substring(index + 1);
                 }
                 log.debug("name,options={},{}", name, options);
                 final GatexProxyInterceptorFactory factory = this._proxyInterceptorFactories.get(name);
