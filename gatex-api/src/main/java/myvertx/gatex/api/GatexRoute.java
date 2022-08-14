@@ -23,6 +23,12 @@ public class GatexRoute {
      */
     private Map<String, Object>[] predicates;
 
+    /**
+     * 来源配置
+     *
+     * path和regexPath可以同时使用，是or的逻辑
+     *
+     */
     @Data
     public static class Src {
         /**
@@ -39,6 +45,9 @@ public class GatexRoute {
         private Map<String, Object> matchers;
     }
 
+    /**
+     * 目的地配置
+     */
     @Data
     public static class Dst {
         /**
@@ -50,6 +59,7 @@ public class GatexRoute {
          */
         private Integer             port;
         /**
+         * 客户端的配置选项
          * httpClientOptions
          */
         private Map<String, Object> client;
