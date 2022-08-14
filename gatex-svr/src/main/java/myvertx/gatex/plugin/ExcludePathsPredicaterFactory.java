@@ -1,4 +1,4 @@
-package myvertx.gatex.predicater;
+package myvertx.gatex.plugin;
 
 import java.util.List;
 
