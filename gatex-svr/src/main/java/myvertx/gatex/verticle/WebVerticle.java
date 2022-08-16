@@ -8,8 +8,6 @@ import java.util.ServiceLoader;
 
 import javax.inject.Inject;
 
-import org.apache.commons.lang3.StringUtils;
-
 import io.vertx.core.Handler;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpClientOptions;
@@ -73,9 +71,9 @@ public class WebVerticle extends AbstractWebVerticle {
             // 当前循环配置路由所配置的路由列表
             final List<Route> routes = new LinkedList<>();
 
-            log.info("解析routes[].src");
+            log.info("解析main.routes[].src");
             if (gatexRouteConfig.getSrc() != null) {
-                log.debug("读取routes[].src.path");
+                log.debug("读取main.routes[].src.path");
                 final Object pathObj = gatexRouteConfig.getSrc().getPath();
                 if (pathObj != null) {
                     if (pathObj instanceof final String pathStr) {
@@ -83,11 +81,11 @@ public class WebVerticle extends AbstractWebVerticle {
                     } else if (pathObj instanceof final List<?> pathArr) {
                         pathArr.forEach(item -> addRoute(router, routes, (String) item, false));
                     } else {
-                        throw new RuntimeException("配置错误: routes[].src.path属性必须是String或String[]类型");
+                        throw new RuntimeException("配置错误: main.routes[].src.path属性必须是String或String[]类型");
                     }
                 }
 
-                log.debug("读取routes[].src.regexPath");
+                log.debug("读取main.routes[].src.regexPath");
                 final Object regexPathObj = gatexRouteConfig.getSrc().getRegexPath();
                 if (regexPathObj != null) {
                     if (regexPathObj instanceof final String pathStr) {
@@ -95,11 +93,11 @@ public class WebVerticle extends AbstractWebVerticle {
                     } else if (regexPathObj instanceof final List<?> pathArr) {
                         pathArr.forEach(item -> addRoute(router, routes, (String) item, true));
                     } else {
-                        throw new RuntimeException("配置错误: routes[].src.regexPath属性必须是String或String[]类型");
+                        throw new RuntimeException("配置错误: main.routes[].src.regexPath属性必须是String或String[]类型");
                     }
                 }
 
-                log.debug("读取routes[].src.matchers");
+                log.debug("读取main.routes[].src.matchers");
                 final Map<String, Object> matchers = gatexRouteConfig.getSrc().getMatchers();
                 if (matchers != null) {
                     log.debug("添加匹配器");
@@ -117,10 +115,10 @@ public class WebVerticle extends AbstractWebVerticle {
                 routes.add(router.route());
             }
 
-            log.info("解析routes[].dst");
+            log.info("解析main.routes[].dst");
             final Dst dst = gatexRouteConfig.getDst();
-            Arguments.require(dst != null, "routes[].dst不能为null");
-            Arguments.require(dst.getHost() != null, "routes[].dst.host不能为null");
+            Arguments.require(dst != null, "main.routes[].dst不能为null");
+            Arguments.require(dst.getHost() != null, "main.routes[].dst.host不能为null");
 
             if ("static".equalsIgnoreCase(dst.getHost())) {
                 // 配置静态资源类的路由
@@ -163,7 +161,7 @@ public class WebVerticle extends AbstractWebVerticle {
      */
     private void configProxyRoute(final GatexRoute gatexRouteConfig, final List<Route> routes, final Dst dst) {
         log.info("配置代理类的路由");
-        Arguments.require(dst.getPort() != null, "routes[].dst.port不能为null");
+        Arguments.require(dst.getPort() != null, "main.routes[].dst.port不能为null");
 
         // 获取HttpClientOptions
         final HttpClientOptions httpClientOptions = dst.getClient() == null ? new HttpClientOptions()
@@ -253,30 +251,15 @@ public class WebVerticle extends AbstractWebVerticle {
      * @param httpProxy         Http客户端代理
      * @param proxyInterceptors 代理拦截器列表
      */
-    private void addProxyInterceptors(final HttpProxy httpProxy, final List<Object> proxyInterceptors) {
+    private void addProxyInterceptors(final HttpProxy httpProxy, final Map<String, Object> proxyInterceptors) {
         if (proxyInterceptors != null) {
-            proxyInterceptors.forEach(item -> {
-                String name;
-                Object options = null;
-                if (!(item instanceof final String value)) {
-                    throw new IllegalArgumentException("代理拦截器暂时只支持配置为String类型的值");
-                }
-                final int index = value.indexOf('=');
-                if (index == -1) {
-                    name = value;
-                } else {
-                    name    = StringUtils.left(value, index);
-                    options = value.substring(index + 1);
-                }
-                log.debug("name,options={},{}", name, options);
-                final GatexProxyInterceptorFactory factory = this._proxyInterceptorFactories.get(name);
+            proxyInterceptors.forEach((key, value) -> {
+                log.debug("proxyInterceptor: name-{}, options-{}", key, value);
+                final GatexProxyInterceptorFactory factory = this._proxyInterceptorFactories.get(key);
                 if (factory == null) {
-                    throw new IllegalArgumentException("找不到名称为" + name + "的代理拦截器");
+                    throw new IllegalArgumentException("找不到名称为" + key + "的代理拦截器");
                 }
-                final ProxyInterceptor proxyInterceptor = factory.create(options);
-                if (proxyInterceptor == null) {
-                    return;
-                }
+                final ProxyInterceptor proxyInterceptor = factory.create(value);
                 httpProxy.addInterceptor(proxyInterceptor);
             });
         }

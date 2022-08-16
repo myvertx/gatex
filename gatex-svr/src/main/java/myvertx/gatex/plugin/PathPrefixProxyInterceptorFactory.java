@@ -10,7 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import myvertx.gatex.api.GatexProxyInterceptorFactory;
 
 /**
- * 路径前缀代理拦截器工厂
+ * 请求路径补充前缀的代理拦截器工厂
  * 代理请求的uri会添加上设置的前缀
  */
 @Slf4j

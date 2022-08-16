@@ -13,17 +13,17 @@ import myvertx.gatex.api.GatexPredicaterFactory;
  *
  */
 @Slf4j
-public class ExcludePathsPredicaterFactory implements GatexPredicaterFactory {
+public class PathExcludePredicaterFactory implements GatexPredicaterFactory {
 
     @Override
     public String name() {
-        return "excludePaths";
+        return "pathExclude";
     }
 
     @Override
     public GatexPredicater create(Object options) {
         if (options == null) {
-            throw new IllegalArgumentException("excludePaths的值为空");
+            throw new IllegalArgumentException("并未配置pathExclude的值");
         }
 
         @SuppressWarnings("unchecked")
@@ -31,6 +31,7 @@ public class ExcludePathsPredicaterFactory implements GatexPredicaterFactory {
 
         return ctx -> {
             final String uri = ctx.request().uri();
+            log.debug("pathExclude.test: {}", uri);
             for (final String regexPath : regexPaths) {
                 if (uri.matches(regexPath)) {
                     log.debug("排除路径: {}", uri);

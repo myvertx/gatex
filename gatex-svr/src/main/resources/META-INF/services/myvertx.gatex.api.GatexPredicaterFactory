@@ -1,1 +1,1 @@
-myvertx.gatex.plugin.ExcludePathsPredicaterFactory
+myvertx.gatex.plugin.PathExcludePredicaterFactory

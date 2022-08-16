@@ -47,9 +47,9 @@
 					"client": {
 						"logActivity": true
 					},
-					"proxyInterceptors": [
-						"patchHtmlBase=/redisweb"
-					]
+					"proxyInterceptors": {
+						"patchHtmlBase": "/redisweb"
+					}
 				}
 			}
 		]

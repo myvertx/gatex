@@ -1,5 +1,8 @@
 package myvertx.gatex.plugin;
 
+import java.util.List;
+import java.util.Map;
+
 import org.apache.commons.lang3.StringUtils;
 
 import io.vertx.core.Future;
@@ -8,61 +11,39 @@ import io.vertx.core.http.HttpHeaders;
 import io.vertx.httpproxy.Body;
 import io.vertx.httpproxy.ProxyContext;
 import io.vertx.httpproxy.ProxyInterceptor;
-import io.vertx.httpproxy.ProxyRequest;
 import io.vertx.httpproxy.ProxyResponse;
 import lombok.extern.slf4j.Slf4j;
 import myvertx.gatex.api.GatexProxyInterceptorFactory;
 import rebue.wheel.vertx.httpproxy.impl.BufferingWriteStreamEx;
 
 /**
- * 补充html内容给链接加上前缀的代理拦截器工厂
- * 补充html内容给所有链接加上配置的前缀
+ * 给html内容中的链接补上前缀的代理拦截器工厂
  *
  * @author zbz
  *
  */
 @Slf4j
-public class PatchHtmlPathPrefixProxyInterceptorFactory implements GatexProxyInterceptorFactory {
+public class HtmlReplaceProxyInterceptorFactory implements GatexProxyInterceptorFactory {
     @Override
     public String name() {
-        return "patchHtmlPathPrefix";
+        return "htmlReplace";
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public ProxyInterceptor create(final Object options) {
         if (options == null) {
-            log.warn("并未配置路径前缀");
-            return null;
-        }
-        final String pathPrefixConfig = (String) options;
-        if (StringUtils.isBlank(pathPrefixConfig)) {
-            log.warn("并未配置路径前缀");
-            return null;
+            throw new IllegalArgumentException("并未配置htmlReplace的值");
         }
 
-        final String pathPrefix = pathPrefixConfig.length() > 1 && pathPrefixConfig.charAt(pathPrefixConfig.length() - 1) == '/'
-                ? StringUtils.left(pathPrefixConfig, pathPrefixConfig.length() - 1)
-                : pathPrefixConfig;
+        if (!(options instanceof final List<?> replaceOptions)) {
+            throw new RuntimeException("配置错误: main.routes[].dst.proxyInterceptors[].htmlReplace属性必须是String或String[]类型");
+        }
 
         return new ProxyInterceptor() {
             @Override
-            public Future<ProxyResponse> handleProxyRequest(final ProxyContext proxyContext) {
-                log.debug("patchHtmlPathPrefix.handleProxyRequest: {}", proxyContext);
-
-                final ProxyRequest proxyRequest = proxyContext.request();
-                final String       contentType  = proxyRequest.headers().get(HttpHeaders.CONTENT_TYPE);
-                log.debug("content-type: {}", contentType);
-                final String uri = proxyContext.request().getURI();
-                log.debug("请求链接{}须去掉前缀: {}", uri, pathPrefix);
-                proxyContext.request().setURI(uri.replaceFirst(pathPrefix, ""));
-
-                // 继续拦截器
-                return proxyContext.sendRequest();
-            }
-
-            @Override
             public Future<Void> handleProxyResponse(final ProxyContext proxyContext) {
-                log.debug("patchHtmlPathPrefix.handleProxyResponse: {}", proxyContext);
+                log.debug("htmlReplace.handleProxyResponse: {}", proxyContext);
                 final ProxyResponse proxyResponse = proxyContext.response();
                 final int           statusCode    = proxyResponse.getStatusCode();
                 final String        contentType   = proxyResponse.headers().get(HttpHeaders.CONTENT_TYPE);
@@ -72,10 +53,13 @@ public class PatchHtmlPathPrefixProxyInterceptorFactory implements GatexProxyInt
                     final BufferingWriteStreamEx buffer = new BufferingWriteStreamEx();
                     return body.stream().pipeTo(buffer).compose(v -> {
                         String content = buffer.content().toString();
-                        content = content.replaceAll(" href=\"/", " href=\"");
-                        content = content.replaceAll(" src=\"/", " src=\"");
-                        content = content.replaceAll(" href=\"", " href=\"" + pathPrefix);
-                        content = content.replaceAll(" src=\"", " src=\"" + pathPrefix);
+                        for (final Object option : replaceOptions) {
+                            final Map<String, String> optionMap   = (Map<String, String>) option;
+                            final String              regex       = optionMap.get("regex");
+                            final String              replacement = optionMap.get("replacement");
+                            content = content.replaceAll(regex, replacement);
+                        }
+
                         // 重新设置body
                         proxyResponse.setBody(Body.body(Buffer.buffer(content)));
                         return proxyContext.sendResponse();

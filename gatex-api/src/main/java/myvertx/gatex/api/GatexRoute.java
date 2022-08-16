@@ -1,6 +1,5 @@
 package myvertx.gatex.api;
 
-import java.util.List;
 import java.util.Map;
 
 import lombok.Data;
@@ -77,7 +76,7 @@ public class GatexRoute {
         /**
          * 代理拦截器
          */
-        private List<Object>        proxyInterceptors;
+        private Map<String, Object> proxyInterceptors;
     }
 
 }
