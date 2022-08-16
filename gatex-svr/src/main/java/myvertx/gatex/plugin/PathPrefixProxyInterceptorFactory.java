@@ -11,6 +11,7 @@ import myvertx.gatex.api.GatexProxyInterceptorFactory;
 
 /**
  * 路径前缀代理拦截器工厂
+ * 代理请求的uri会添加上设置的前缀
  */
 @Slf4j
 public class PathPrefixProxyInterceptorFactory implements GatexProxyInterceptorFactory {

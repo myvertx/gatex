@@ -14,6 +14,13 @@ import lombok.extern.slf4j.Slf4j;
 import myvertx.gatex.api.GatexProxyInterceptorFactory;
 import rebue.wheel.vertx.httpproxy.impl.BufferingWriteStreamEx;
 
+/**
+ * 补充html内容加上base节点的代理拦截器工厂
+ * 代理会在html的head中加入base节点并设置为配置的值
+ *
+ * @author zbz
+ *
+ */
 @Slf4j
 public class PatchHtmlBaseProxyInterceptorFactory implements GatexProxyInterceptorFactory {
     @Override
@@ -32,7 +39,7 @@ public class PatchHtmlBaseProxyInterceptorFactory implements GatexProxyIntercept
             log.warn("并未配置路径前缀");
             return null;
         }
-        final String baseHref = (baseHrefConfig.length() > 1 && baseHrefConfig.charAt(baseHrefConfig.length() - 1) == '/')
+        final String baseHref = baseHrefConfig.length() > 1 && baseHrefConfig.charAt(baseHrefConfig.length() - 1) == '/'
                 ? StringUtils.left(baseHrefConfig, baseHrefConfig.length() - 1)
                 : baseHrefConfig;
 

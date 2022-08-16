@@ -14,6 +14,13 @@ import lombok.extern.slf4j.Slf4j;
 import myvertx.gatex.api.GatexProxyInterceptorFactory;
 import rebue.wheel.vertx.httpproxy.impl.BufferingWriteStreamEx;
 
+/**
+ * 补充html内容给链接加上前缀的代理拦截器工厂
+ * 补充html内容给所有链接加上配置的前缀
+ *
+ * @author zbz
+ *
+ */
 @Slf4j
 public class PatchHtmlPathPrefixProxyInterceptorFactory implements GatexProxyInterceptorFactory {
     @Override
@@ -33,7 +40,7 @@ public class PatchHtmlPathPrefixProxyInterceptorFactory implements GatexProxyInt
             return null;
         }
 
-        final String pathPrefix = (pathPrefixConfig.length() > 1 && pathPrefixConfig.charAt(pathPrefixConfig.length() - 1) == '/')
+        final String pathPrefix = pathPrefixConfig.length() > 1 && pathPrefixConfig.charAt(pathPrefixConfig.length() - 1) == '/'
                 ? StringUtils.left(pathPrefixConfig, pathPrefixConfig.length() - 1)
                 : pathPrefixConfig;
 
