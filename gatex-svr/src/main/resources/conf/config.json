@@ -48,7 +48,7 @@
 						"logActivity": true
 					},
 					"proxyInterceptors": {
-						"patchHtmlBase": "/redisweb"
+						"htmlBase": "/redisweb"
 					}
 				}
 			}
