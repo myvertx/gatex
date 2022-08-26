@@ -51,6 +51,14 @@
 						"htmlBase": "/redisweb"
 					}
 				}
+			},
+			{
+				"src": {
+					"path": "/pay-platform/*"
+				},
+				"dst": {
+					"host": "static"
+				}
 			}
 		]
 	},

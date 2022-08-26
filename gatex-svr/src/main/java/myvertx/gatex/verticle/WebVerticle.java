@@ -145,10 +145,12 @@ public class WebVerticle extends AbstractWebVerticle {
             // 添加断言处理器
             addPredicateHandler(route, gatexRouteConfig.getPredicates());
 
-            // 设置静态路由
-            final String routePath = route.getPath();
-            log.info("路由的path: {}", routePath);
-            route.handler(StaticHandler.create("webroot/" + routePath));
+            // 设置静态根目录
+            final String staticRootDirectory = "webroot" + route.getPath();
+            log.info("静态根目录: {}", staticRootDirectory);
+            route.handler(StaticHandler.create(staticRootDirectory));
+            route.handler(ctx -> ctx.response().sendFile(staticRootDirectory + "index.html"));
+            // route.handler(ctx -> ctx.response().putHeader("location", staticRootDirectory + "index.html").setStatusCode(302).end());
         });
     }
 
