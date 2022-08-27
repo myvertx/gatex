@@ -50,13 +50,18 @@ public class GatexRoute {
     @Data
     public static class Dst {
         /**
-         * 目的地的主机名
+         * 目的地的主机名(如果是本机静态网站，请填static，且不用填写port项)
          */
         private String              host;
         /**
          * 目的地的端口号
          */
         private Integer             port;
+        /**
+         * 静态网站的HistoryMode(Hash/Html5/Memory)，默认为Html5
+         */
+        private String              historyMode = "Html5";
+
         /**
          * 客户端的配置选项
          * httpClientOptions

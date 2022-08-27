@@ -149,8 +149,10 @@ public class WebVerticle extends AbstractWebVerticle {
             final String staticRootDirectory = "webroot" + route.getPath();
             log.info("静态根目录: {}", staticRootDirectory);
             route.handler(StaticHandler.create(staticRootDirectory));
-            route.handler(ctx -> ctx.response().sendFile(staticRootDirectory + "index.html"));
-            // route.handler(ctx -> ctx.response().putHeader("location", staticRootDirectory + "index.html").setStatusCode(302).end());
+            // 如果静态网站是Html5的HistoryMode，需要添加专门的处理器
+            if ("Html5".equalsIgnoreCase(gatexRouteConfig.getDst().getHistoryMode())) {
+                route.handler(ctx -> ctx.response().sendFile(staticRootDirectory + "index.html"));
+            }
         });
     }
 
