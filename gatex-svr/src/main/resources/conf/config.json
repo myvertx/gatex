@@ -59,6 +59,26 @@
 				"dst": {
 					"host": "static"
 				}
+			},
+			{
+				"src": {
+					"path": "/b03-web/*"
+				},
+				"dst": {
+					"host": "static"
+				}
+			},
+			{
+				"src": {
+					"path": "/b03/*"
+				},
+				"dst": {
+					"host": "127.0.0.1",
+					"port": 9203,
+					"client": {
+						"logActivity": true
+					}
+				}
 			}
 		]
 	},
@@ -68,6 +88,7 @@
 			"isLogging": true,
 			"isResponseTime": true,
 			"timeout": 5000,
+			"isCors": true,
 			"server": {
 				"port": 8090,
 				"logActivity": true
