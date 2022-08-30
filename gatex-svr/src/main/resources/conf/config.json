@@ -39,6 +39,35 @@
 			},
 			{
 				"src": {
+					"path": "/pay/api/v1/*"
+				},
+				"dst": {
+					"host": "127.0.0.1",
+					"port": 9302,
+					"client": {
+						"logActivity": true
+					}
+				},
+				"predicates": {
+					"pathExclude": [
+						"^/pay/api/v1/pay"
+					]
+				}
+			},
+			{
+				"src": {
+					"path": "/pay/api/v1/pay"
+				},
+				"dst": {
+					"host": "127.0.0.1",
+					"port": 9302,
+					"client": {
+						"logActivity": true
+					}
+				}
+			},
+			{
+				"src": {
 					"path": "/redisweb/*"
 				},
 				"dst": {
