@@ -3,6 +3,7 @@ package myvertx.gatex.plugin;
 import org.apache.commons.lang3.StringUtils;
 
 import io.vertx.core.Future;
+import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpHeaders;
 import io.vertx.httpproxy.Body;
@@ -28,7 +29,7 @@ public class HtmlPathPrefixProxyInterceptorFactory implements GatexProxyIntercep
     }
 
     @Override
-    public ProxyInterceptor create(final Object options) {
+    public ProxyInterceptor create(Vertx vertx, final Object options) {
         if (options == null) {
             throw new IllegalArgumentException("并未配置htmlPathPrefix的值");
         }

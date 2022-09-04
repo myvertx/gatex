@@ -1,5 +1,6 @@
 package myvertx.gatex.api;
 
+import io.vertx.core.Vertx;
 import io.vertx.httpproxy.ProxyInterceptor;
 
 /**
@@ -19,6 +20,6 @@ public interface GatexProxyInterceptorFactory {
      *
      * @param options 创建拦截器的参数
      */
-    ProxyInterceptor create(Object options);
+    ProxyInterceptor create(Vertx vertx, Object options);
 
 }

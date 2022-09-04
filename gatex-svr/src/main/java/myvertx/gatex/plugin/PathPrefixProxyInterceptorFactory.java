@@ -3,6 +3,7 @@ package myvertx.gatex.plugin;
 import org.apache.commons.lang3.StringUtils;
 
 import io.vertx.core.Future;
+import io.vertx.core.Vertx;
 import io.vertx.httpproxy.ProxyContext;
 import io.vertx.httpproxy.ProxyInterceptor;
 import io.vertx.httpproxy.ProxyResponse;
@@ -21,7 +22,7 @@ public class PathPrefixProxyInterceptorFactory implements GatexProxyInterceptorF
     }
 
     @Override
-    public ProxyInterceptor create(final Object options) {
+    public ProxyInterceptor create(Vertx vertx, final Object options) {
         if (options == null) {
             log.warn("并未配置路径前缀");
             return null;

@@ -27,6 +27,24 @@
 			},
 			{
 				"src": {
+					"path": "/bank/api/v1/payCallback"
+				},
+				"dst": {
+					"host": "127.0.0.1",
+					"port": 8090,
+					"client": {
+						"logActivity": true
+					},
+					"proxyInterceptors": {
+						"b04.001": {
+							"host2": "127.0.0.1",
+							"port2": 8090
+						}
+					}
+				}
+			},
+			{
+				"src": {
 					"regexPath": "^/bank/api/v2/.*"
 				},
 				"dst": {

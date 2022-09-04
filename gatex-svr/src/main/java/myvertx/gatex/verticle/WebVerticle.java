@@ -104,7 +104,7 @@ public class WebVerticle extends AbstractWebVerticle {
                     matchers.entrySet().forEach(entry -> {
                         final GatexMatcher gatexMatcher = this._matchers.get(entry.getKey());
                         routes.forEach(route -> {
-                            gatexMatcher.addMatcher(route, entry.getValue());
+                            gatexMatcher.addMatcher(this.vertx, route, entry.getValue());
                         });
                     });
                 }
@@ -237,7 +237,7 @@ public class WebVerticle extends AbstractWebVerticle {
                 throw new IllegalArgumentException("找不到名为" + key + "的断言工厂");
             }
             log.info("使用{}断言工厂创建断言", key);
-            final GatexPredicater predicater = factory.create(value);
+            final GatexPredicater predicater = factory.create(this.vertx, value);
             route.handler(ctx -> {
                 log.debug("进入{}断言器判断", factory.name());
                 if (predicater.test(ctx)) {
@@ -263,7 +263,7 @@ public class WebVerticle extends AbstractWebVerticle {
                 if (factory == null) {
                     throw new IllegalArgumentException("找不到名称为" + key + "的代理拦截器");
                 }
-                final ProxyInterceptor proxyInterceptor = factory.create(value);
+                final ProxyInterceptor proxyInterceptor = factory.create(this.vertx, value);
                 httpProxy.addInterceptor(proxyInterceptor);
             });
         }
@@ -282,7 +282,7 @@ public class WebVerticle extends AbstractWebVerticle {
                 if (factory == null) {
                     throw new IllegalArgumentException("找不到名称为" + entry.getKey() + "的过滤器");
                 }
-                final Handler<RoutingContext> handler = factory.create(entry.getValue());
+                final Handler<RoutingContext> handler = factory.create(this.vertx, entry.getValue());
                 if (handler == null) {
                     return;
                 }

@@ -1,5 +1,6 @@
 package myvertx.gatex.api;
 
+import io.vertx.core.Vertx;
 import io.vertx.ext.web.Route;
 
 /**
@@ -20,6 +21,6 @@ public interface GatexMatcher {
      * @param route 路由
      * @param value 匹配器的参数的值
      */
-    void addMatcher(Route route, Object value);
+    void addMatcher(Vertx vertx, Route route, Object value);
 
 }

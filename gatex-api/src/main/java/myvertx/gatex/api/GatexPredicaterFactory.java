@@ -1,5 +1,7 @@
 package myvertx.gatex.api;
 
+import io.vertx.core.Vertx;
+
 /**
  * 断言器工厂
  *
@@ -17,6 +19,6 @@ public interface GatexPredicaterFactory {
      *
      * @param options 创建拦截器的参数
      */
-    GatexPredicater create(Object options);
+    GatexPredicater create(Vertx vertx, Object options);
 
 }

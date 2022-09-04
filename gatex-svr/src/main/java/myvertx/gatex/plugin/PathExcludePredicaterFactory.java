@@ -2,6 +2,7 @@ package myvertx.gatex.plugin;
 
 import java.util.List;
 
+import io.vertx.core.Vertx;
 import lombok.extern.slf4j.Slf4j;
 import myvertx.gatex.api.GatexPredicater;
 import myvertx.gatex.api.GatexPredicaterFactory;
@@ -21,7 +22,7 @@ public class PathExcludePredicaterFactory implements GatexPredicaterFactory {
     }
 
     @Override
-    public GatexPredicater create(Object options) {
+    public GatexPredicater create(Vertx vertx, Object options) {
         if (options == null) {
             throw new IllegalArgumentException("并未配置pathExclude的值");
         }
