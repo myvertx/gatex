@@ -37,9 +37,24 @@
 					},
 					"proxyInterceptors": {
 						"b04.001": {
-							"host2": "127.0.0.1",
-							"port2": 8090
+							"resultCode": "50000",
+							"errorMsg": "需要测试才知道"
 						}
+					},
+					"postFilters": {
+						"b04.001": "/bank/api/v1/payCode/query"
+					}
+				}
+			},
+			{
+				"src": {
+					"regexPath": "/bank/api/v1/payCode/query"
+				},
+				"dst": {
+					"host": "127.0.0.1",
+					"port": 8090,
+					"client": {
+						"logActivity": true
 					}
 				}
 			},
