@@ -49,7 +49,7 @@ public class HtmlReplaceProxyInterceptorFactory implements GatexProxyInterceptor
                 final int           statusCode    = proxyResponse.getStatusCode();
                 final String        contentType   = proxyResponse.headers().get(HttpHeaders.CONTENT_TYPE);
                 log.debug("state code: {}; content-type: {}", statusCode, contentType);
-                if (proxyResponse.getStatusCode() == 200 && StringUtils.isNotBlank(contentType) && contentType.contains("text/html")) {
+                if (statusCode == 200 && StringUtils.isNotBlank(contentType) && contentType.contains("text/html")) {
                     final Body                   body   = proxyResponse.getBody();
                     final BufferingWriteStreamEx buffer = new BufferingWriteStreamEx();
                     return body.stream().pipeTo(buffer).compose(v -> {

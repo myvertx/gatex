@@ -181,8 +181,6 @@ public class WebVerticle extends AbstractWebVerticle {
 
         log.info("遍历当前循环的路由列表中的每一个路由，并添加代理处理器");
         routes.forEach(route -> {
-            // 添加Body处理器
-            // route.handler(BodyHandler.create());
             // 添加断言处理器
             addPredicateHandler(route, gatexRouteConfig.getPredicates());
             // 添加前置过滤器

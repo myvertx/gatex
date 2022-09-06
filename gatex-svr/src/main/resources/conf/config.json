@@ -34,15 +34,6 @@
 					"port": 8090,
 					"client": {
 						"logActivity": true
-					},
-					"proxyInterceptors": {
-						"b04.001": {
-							"resultCode": "50000",
-							"errorMsg": "需要测试才知道"
-						}
-					},
-					"postFilters": {
-						"b04.001": "/bank/api/v1/payCode/query"
 					}
 				}
 			},
@@ -111,6 +102,18 @@
 					},
 					"proxyInterceptors": {
 						"htmlBase": "/redisweb"
+					}
+				}
+			},
+			{
+				"src": {
+					"path": "/turtest/*"
+				},
+				"dst": {
+					"host": "127.0.0.1",
+					"port": 9000,
+					"client": {
+						"logActivity": true
 					}
 				}
 			},
