@@ -15,6 +15,18 @@
 			},
 			{
 				"src": {
+					"regexPath": "^/b02/.*"
+				},
+				"dst": {
+					"host": "127.0.0.1",
+					"port": 9202,
+					"client": {
+						"logActivity": true
+					}
+				}
+			},
+			{
+				"src": {
 					"regexPath": "^/c02/.*"
 				},
 				"dst": {
@@ -148,7 +160,6 @@
 		]
 	},
 	"web": {
-		"instances": 3,
 		"config": {
 			"isLogging": true,
 			"isResponseTime": true,
