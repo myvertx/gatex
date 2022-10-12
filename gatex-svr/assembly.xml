@@ -22,6 +22,7 @@
 				<exclude>io.vertx:vertx-bridge-common</exclude>
 				<exclude>io.vertx:vertx-config</exclude>
 				<exclude>io.vertx:vertx-core</exclude>
+				<exclude>io.vertx:vertx-http-proxy</exclude>
 				<exclude>io.vertx:vertx-json-schema</exclude>
 				<exclude>io.vertx:vertx-web</exclude>
 				<exclude>io.vertx:vertx-web-common</exclude>

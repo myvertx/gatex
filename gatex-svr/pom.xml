@@ -42,6 +42,12 @@
 			<groupId>io.vertx</groupId>
 			<artifactId>vertx-json-schema</artifactId>
 		</dependency>
+		<!-- 代码生成-->
+		<dependency>
+			<groupId>io.vertx</groupId>
+			<artifactId>vertx-codegen</artifactId>
+			<scope>provided</scope>
+		</dependency>
 		<dependency>
 			<groupId>io.vertx</groupId>
 			<artifactId>vertx-junit5</artifactId>

@@ -8,11 +8,11 @@ import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpHeaders;
 import io.vertx.httpproxy.Body;
 import io.vertx.httpproxy.ProxyContext;
-import io.vertx.httpproxy.ProxyInterceptor;
 import io.vertx.httpproxy.ProxyRequest;
 import io.vertx.httpproxy.ProxyResponse;
 import lombok.extern.slf4j.Slf4j;
 import myvertx.gatex.api.GatexProxyInterceptorFactory;
+import rebue.wheel.vertx.httpproxy.ProxyInterceptorEx;
 import rebue.wheel.vertx.httpproxy.impl.BufferingWriteStreamEx;
 
 /**
@@ -29,7 +29,7 @@ public class HtmlBaseProxyInterceptorFactory implements GatexProxyInterceptorFac
     }
 
     @Override
-    public ProxyInterceptor create(Vertx vertx, final Object options) {
+    public ProxyInterceptorEx create(Vertx vertx, final Object options) {
         if (options == null) {
             throw new IllegalArgumentException("并未配置htmlBase的值");
         }
@@ -41,7 +41,7 @@ public class HtmlBaseProxyInterceptorFactory implements GatexProxyInterceptorFac
                 ? StringUtils.left(baseHrefConfig, baseHrefConfig.length() - 1)
                 : baseHrefConfig;
 
-        return new ProxyInterceptor() {
+        return new ProxyInterceptorEx() {
             @Override
             public Future<ProxyResponse> handleProxyRequest(final ProxyContext proxyContext) {
                 log.debug("htmlBase.handleProxyRequest: {}", proxyContext);

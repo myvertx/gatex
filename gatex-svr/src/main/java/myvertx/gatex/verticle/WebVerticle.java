@@ -8,7 +8,6 @@ import java.util.ServiceLoader;
 
 import javax.inject.Inject;
 
-import io.vertx.core.Handler;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpClientOptions;
 import io.vertx.core.http.HttpMethod;
@@ -16,11 +15,8 @@ import io.vertx.core.impl.Arguments;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Route;
 import io.vertx.ext.web.Router;
-import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.StaticHandler;
 import io.vertx.ext.web.proxy.handler.ProxyHandler;
-import io.vertx.httpproxy.HttpProxy;
-import io.vertx.httpproxy.ProxyInterceptor;
 import lombok.extern.slf4j.Slf4j;
 import myvertx.gatex.api.GatexFilterFactory;
 import myvertx.gatex.api.GatexMatcher;
@@ -30,7 +26,10 @@ import myvertx.gatex.api.GatexProxyInterceptorFactory;
 import myvertx.gatex.api.GatexRoute;
 import myvertx.gatex.api.GatexRoute.Dst;
 import myvertx.gatex.config.MainProperties;
+import rebue.wheel.vertx.httpproxy.HttpProxyEx;
+import rebue.wheel.vertx.httpproxy.ProxyInterceptorEx;
 import rebue.wheel.vertx.verticle.AbstractWebVerticle;
+import rebue.wheel.vertx.web.proxy.handler.impl.ProxyHandlerExImpl;
 
 @Slf4j
 public class WebVerticle extends AbstractWebVerticle {
@@ -67,6 +66,7 @@ public class WebVerticle extends AbstractWebVerticle {
         proxyInterceptorFactory.forEach(factory -> this._proxyInterceptorFactories.put(factory.name(), factory));
 
         log.info("根据配置中的路由列表来配置路由");
+        log.info("********************************************************");
         for (final GatexRoute gatexRouteConfig : this.mainProperties.getRoutes()) {
             // 当前循环配置路由所配置的路由列表
             final List<Route> routes = new LinkedList<>();
@@ -101,10 +101,10 @@ public class WebVerticle extends AbstractWebVerticle {
                 final Map<String, Object> matchers = gatexRouteConfig.getSrc().getMatchers();
                 if (matchers != null) {
                     log.debug("添加匹配器");
-                    matchers.entrySet().forEach(entry -> {
-                        final GatexMatcher gatexMatcher = this._matchers.get(entry.getKey());
+                    matchers.forEach((key, value) -> {
+                        final GatexMatcher gatexMatcher = this._matchers.get(key);
                         routes.forEach(route -> {
-                            gatexMatcher.addMatcher(this.vertx, route, entry.getValue());
+                            gatexMatcher.addMatcher(this.vertx, route, value);
                         });
                     });
                 }
@@ -128,7 +128,7 @@ public class WebVerticle extends AbstractWebVerticle {
             else {
                 configProxyRoute(gatexRouteConfig, routes, dst);
             }
-
+            log.info("********************************************************");
         }
     }
 
@@ -167,27 +167,29 @@ public class WebVerticle extends AbstractWebVerticle {
         log.info("配置代理类的路由");
         Arguments.require(dst.getPort() != null, "main.routes[].dst.port不能为null");
 
+        log.info("创建HTTP代理");
         // 获取HttpClientOptions
         final HttpClientOptions httpClientOptions = dst.getClient() == null ? new HttpClientOptions()
                 : new HttpClientOptions(JsonObject.mapFrom(dst.getClient()));
         // 创建httpClient
         final HttpClient        httpClient        = this.vertx.createHttpClient(httpClientOptions);
         // 创建Http代理
-        final HttpProxy         httpProxy         = HttpProxy.reverseProxy(httpClient)
-                .origin(dst.getPort(), dst.getHost());
-
-        // 添加代理拦截器
+        final HttpProxyEx       httpProxy         = HttpProxyEx.reverseProxy(httpClient).origin(dst.getPort(), dst.getHost());
+        log.info("给HTTP代理添加代理拦截器");
         addProxyInterceptors(httpProxy, dst.getProxyInterceptors());
+        log.info("创建代理处理器");
+        final ProxyHandler proxyHandler = new ProxyHandlerExImpl(httpProxy);
 
         log.info("遍历当前循环的路由列表中的每一个路由，并添加代理处理器");
         routes.forEach(route -> {
-            // 添加断言处理器
+            log.debug("路由: {}", route.getPath());
+            log.info("给路由添加断言处理器");
             addPredicateHandler(route, gatexRouteConfig.getPredicates());
-            // 添加前置过滤器
+            log.info("给路由添加前置过滤器");
             addFilters(route, dst.getPreFilters());
-            // 设置代理路由
-            route.handler(ProxyHandler.create(httpProxy));
-            // 添加后置过滤器
+            log.info("给路由添加代理处理器");
+            route.handler(proxyHandler::handle);
+            log.info("给路由添加后置过滤器");
             addFilters(route, dst.getPostFilters());
         });
     }
@@ -224,16 +226,13 @@ public class WebVerticle extends AbstractWebVerticle {
      * @param predicates 断言列表
      */
     private void addPredicateHandler(final Route route, final Map<String, Object> predicates) {
-        log.info("给路由添加predicater的处理器");
         if (predicates == null || predicates.isEmpty()) {
             return;
         }
 
         predicates.forEach((key, value) -> {
             final GatexPredicaterFactory factory = this._predicaterFactories.get(key);
-            if (factory == null) {
-                throw new IllegalArgumentException("找不到名为" + key + "的断言工厂");
-            }
+            Arguments.require(factory != null, "找不到名为" + key + "的断言工厂");
             log.info("使用{}断言工厂创建断言", key);
             final GatexPredicater predicater = factory.create(this.vertx, value);
             route.handler(ctx -> {
@@ -253,15 +252,13 @@ public class WebVerticle extends AbstractWebVerticle {
      * @param httpProxy         Http客户端代理
      * @param proxyInterceptors 代理拦截器列表
      */
-    private void addProxyInterceptors(final HttpProxy httpProxy, final Map<String, Object> proxyInterceptors) {
+    private void addProxyInterceptors(final HttpProxyEx httpProxy, final Map<String, Object> proxyInterceptors) {
         if (proxyInterceptors != null) {
             proxyInterceptors.forEach((key, value) -> {
-                log.debug("proxyInterceptor: name-{}, options-{}", key, value);
+                log.debug("proxyInterceptor {}: {}", key, value);
                 final GatexProxyInterceptorFactory factory = this._proxyInterceptorFactories.get(key);
-                if (factory == null) {
-                    throw new IllegalArgumentException("找不到名称为" + key + "的代理拦截器");
-                }
-                final ProxyInterceptor proxyInterceptor = factory.create(this.vertx, value);
+                Arguments.require(factory != null, "找不到名为" + key + "的代理拦截器");
+                final ProxyInterceptorEx proxyInterceptor = factory.create(this.vertx, value);
                 httpProxy.addInterceptor(proxyInterceptor);
             });
         }
@@ -275,16 +272,11 @@ public class WebVerticle extends AbstractWebVerticle {
      */
     private void addFilters(final Route route, final Map<String, Object> filters) {
         if (filters != null) {
-            filters.entrySet().forEach(entry -> {
-                final GatexFilterFactory factory = this._filterFactories.get(entry.getKey());
-                if (factory == null) {
-                    throw new IllegalArgumentException("找不到名称为" + entry.getKey() + "的过滤器");
-                }
-                final Handler<RoutingContext> handler = factory.create(this.vertx, entry.getValue());
-                if (handler == null) {
-                    return;
-                }
-                route.handler(handler);
+            filters.forEach((key, value) -> {
+                log.debug("filter {}: {}", key, value);
+                final GatexFilterFactory factory = this._filterFactories.get(key);
+                Arguments.require(factory != null, "找不到名为" + key + "的过滤器");
+                route.handler(factory.create(this.vertx, value));
             });
         }
     }

@@ -11,10 +11,10 @@ import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpHeaders;
 import io.vertx.httpproxy.Body;
 import io.vertx.httpproxy.ProxyContext;
-import io.vertx.httpproxy.ProxyInterceptor;
 import io.vertx.httpproxy.ProxyResponse;
 import lombok.extern.slf4j.Slf4j;
 import myvertx.gatex.api.GatexProxyInterceptorFactory;
+import rebue.wheel.vertx.httpproxy.ProxyInterceptorEx;
 import rebue.wheel.vertx.httpproxy.impl.BufferingWriteStreamEx;
 
 /**
@@ -32,7 +32,7 @@ public class HtmlReplaceProxyInterceptorFactory implements GatexProxyInterceptor
 
     @SuppressWarnings("unchecked")
     @Override
-    public ProxyInterceptor create(Vertx vertx, final Object options) {
+    public ProxyInterceptorEx create(Vertx vertx, final Object options) {
         if (options == null) {
             throw new IllegalArgumentException("并未配置htmlReplace的值");
         }
@@ -41,7 +41,7 @@ public class HtmlReplaceProxyInterceptorFactory implements GatexProxyInterceptor
             throw new RuntimeException("配置错误: main.routes[].dst.proxyInterceptors[].htmlReplace属性必须是String或String[]类型");
         }
 
-        return new ProxyInterceptor() {
+        return new ProxyInterceptorEx() {
             @Override
             public Future<Void> handleProxyResponse(final ProxyContext proxyContext) {
                 log.debug("htmlReplace.handleProxyResponse: {}", proxyContext);

@@ -1,0 +1,3 @@
+myvertx.gatex.plugin.RequestBodyReadPreFilterFactory
+myvertx.gatex.plugin.RequestBodyCachedPreFilterFactory
+

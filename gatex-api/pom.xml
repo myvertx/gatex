@@ -9,6 +9,11 @@
 
 	<dependencies>
 		<dependency>
+			<groupId>com.github.rebue.wheel</groupId>
+			<artifactId>wheel-vertx</artifactId>
+		</dependency>
+	
+		<dependency>
 			<groupId>io.vertx</groupId>
 			<artifactId>vertx-web</artifactId>
 			<scope>provided</scope>
