@@ -103,9 +103,7 @@ public class WebVerticle extends AbstractWebVerticle {
                     log.debug("添加匹配器");
                     matchers.forEach((key, value) -> {
                         final GatexMatcher gatexMatcher = this._matchers.get(key);
-                        routes.forEach(route -> {
-                            gatexMatcher.addMatcher(this.vertx, route, value);
-                        });
+                        routes.forEach(route -> gatexMatcher.addMatcher(this.vertx, route, value));
                     });
                 }
             }
@@ -188,7 +186,7 @@ public class WebVerticle extends AbstractWebVerticle {
             log.info("给路由添加前置过滤器");
             addFilters(route, dst.getPreFilters());
             log.info("给路由添加代理处理器");
-            route.handler(proxyHandler::handle);
+            route.handler(proxyHandler);
             log.info("给路由添加后置过滤器");
             addFilters(route, dst.getPostFilters());
         });

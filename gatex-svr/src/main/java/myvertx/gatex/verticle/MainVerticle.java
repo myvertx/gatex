@@ -7,6 +7,8 @@ import com.google.inject.Module;
 
 import io.vertx.core.Verticle;
 import myvertx.gatex.inject.MainModule;
+import rebue.wheel.vertx.guice.KafkaGuiceModule;
+import rebue.wheel.vertx.guice.PulsarGuiceModule;
 import rebue.wheel.vertx.verticle.AbstractMainVerticle;
 
 public class MainVerticle extends AbstractMainVerticle {
@@ -18,6 +20,8 @@ public class MainVerticle extends AbstractMainVerticle {
      */
     @Override
     protected void addGuiceModules(final List<Module> guiceModules) {
+        guiceModules.add(new PulsarGuiceModule());
+        guiceModules.add(new KafkaGuiceModule());
         guiceModules.add(new MainModule());
     }
 
