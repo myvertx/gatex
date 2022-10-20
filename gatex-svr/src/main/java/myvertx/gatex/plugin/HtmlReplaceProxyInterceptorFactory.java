@@ -3,6 +3,7 @@ package myvertx.gatex.plugin;
 import java.util.List;
 import java.util.Map;
 
+import com.google.inject.Injector;
 import org.apache.commons.lang3.StringUtils;
 
 import io.vertx.core.Future;
@@ -32,7 +33,7 @@ public class HtmlReplaceProxyInterceptorFactory implements GatexProxyInterceptor
 
     @SuppressWarnings("unchecked")
     @Override
-    public ProxyInterceptorEx create(Vertx vertx, final Object options) {
+    public ProxyInterceptorEx create(Vertx vertx, final Object options, Injector injector) {
         if (options == null) {
             throw new IllegalArgumentException("并未配置htmlReplace的值");
         }

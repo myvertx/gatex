@@ -140,10 +140,10 @@ public class WebVerticle extends AbstractWebVerticle {
         log.info("配置静态资源类的路由");
         log.info("遍历当前循环的路由列表中的每一个路由，并添加静态处理器");
         routes.forEach(route -> {
-            // 添加断言处理器
+            log.info("给路由添加断言处理器");
             addPredicateHandler(route, gatexRouteConfig.getPredicates());
 
-            // 设置静态根目录
+            log.info("设置静态根目录");
             final String staticRootDirectory = "webroot" + route.getPath();
             log.info("静态根目录: {}", staticRootDirectory);
             route.handler(StaticHandler.create(staticRootDirectory));
@@ -256,7 +256,7 @@ public class WebVerticle extends AbstractWebVerticle {
                 log.debug("proxyInterceptor {}: {}", key, value);
                 final GatexProxyInterceptorFactory factory = this._proxyInterceptorFactories.get(key);
                 Arguments.require(factory != null, "找不到名为" + key + "的代理拦截器");
-                final ProxyInterceptorEx proxyInterceptor = factory.create(this.vertx, value);
+                final ProxyInterceptorEx proxyInterceptor = factory.create(this.vertx, value, this.injector);
                 httpProxy.addInterceptor(proxyInterceptor);
             });
         }

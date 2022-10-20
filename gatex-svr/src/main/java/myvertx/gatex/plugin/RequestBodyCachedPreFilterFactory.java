@@ -11,7 +11,6 @@ import rebue.wheel.vertx.web.RequestBodyCachedHandler;
  * 缓存Body的前置过滤器的工厂
  *
  * @author zbz
- *
  */
 @Slf4j
 public class RequestBodyCachedPreFilterFactory implements GatexFilterFactory {

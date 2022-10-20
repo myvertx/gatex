@@ -1,5 +1,6 @@
 package myvertx.gatex.plugin;
 
+import com.google.inject.Injector;
 import org.apache.commons.lang3.StringUtils;
 
 import io.vertx.core.Future;
@@ -29,7 +30,7 @@ public class HtmlBaseProxyInterceptorFactory implements GatexProxyInterceptorFac
     }
 
     @Override
-    public ProxyInterceptorEx create(Vertx vertx, final Object options) {
+    public ProxyInterceptorEx create(Vertx vertx, final Object options, Injector injector) {
         if (options == null) {
             throw new IllegalArgumentException("并未配置htmlBase的值");
         }

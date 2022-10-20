@@ -1,5 +1,6 @@
 package myvertx.gatex.api;
 
+import com.google.inject.Injector;
 import io.vertx.core.Vertx;
 import rebue.wheel.vertx.httpproxy.ProxyInterceptorEx;
 
@@ -18,8 +19,9 @@ public interface GatexProxyInterceptorFactory {
     /**
      * 创建拦截器
      *
-     * @param options 创建拦截器的参数
+     * @param options  创建拦截器的参数
+     * @param injector
      */
-    ProxyInterceptorEx create(Vertx vertx, Object options);
+    ProxyInterceptorEx create(Vertx vertx, Object options, Injector injector);
 
 }

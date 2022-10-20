@@ -11,7 +11,6 @@ import myvertx.gatex.api.GatexFilterFactory;
  * 读取Body的前置过滤器的工厂
  *
  * @author zbz
- *
  */
 @Slf4j
 public class RequestBodyReadPreFilterFactory implements GatexFilterFactory {

@@ -1,5 +1,6 @@
 package myvertx.gatex.plugin;
 
+import com.google.inject.Injector;
 import org.apache.commons.lang3.StringUtils;
 
 import io.vertx.core.Future;
@@ -23,7 +24,7 @@ public class PathPrefixProxyInterceptorFactory implements GatexProxyInterceptorF
     }
 
     @Override
-    public ProxyInterceptorEx create(Vertx vertx, final Object options) {
+    public ProxyInterceptorEx create(Vertx vertx, final Object options, Injector injector) {
         if (options == null) {
             log.warn("并未配置路径前缀");
             return null;

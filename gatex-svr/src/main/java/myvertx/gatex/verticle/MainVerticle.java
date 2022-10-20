@@ -1,17 +1,26 @@
 package myvertx.gatex.verticle;
 
-import java.util.List;
-import java.util.Map;
-
 import com.google.inject.Module;
-
 import io.vertx.core.Verticle;
+import lombok.extern.slf4j.Slf4j;
+import myvertx.gatex.api.GatexGuiceModule;
 import myvertx.gatex.inject.MainModule;
-import rebue.wheel.vertx.guice.KafkaGuiceModule;
-import rebue.wheel.vertx.guice.PulsarGuiceModule;
 import rebue.wheel.vertx.verticle.AbstractMainVerticle;
 
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.ServiceLoader;
+
+@Slf4j
 public class MainVerticle extends AbstractMainVerticle {
+    private final List<GatexGuiceModule> gatexGuiceModules = new LinkedList<>();
+
+    public MainVerticle() {
+        log.info("注册Guice的模块");
+        final ServiceLoader<GatexGuiceModule> guiceModuleServiceLoader = ServiceLoader.load(GatexGuiceModule.class);
+        guiceModuleServiceLoader.forEach(this.gatexGuiceModules::add);
+    }
 
     /**
      * 添加guice模块
@@ -20,9 +29,8 @@ public class MainVerticle extends AbstractMainVerticle {
      */
     @Override
     protected void addGuiceModules(final List<Module> guiceModules) {
-        guiceModules.add(new PulsarGuiceModule());
-        guiceModules.add(new KafkaGuiceModule());
         guiceModules.add(new MainModule());
+        gatexGuiceModules.forEach(gatexGuiceModule -> gatexGuiceModule.add(guiceModules));
     }
 
     /**
