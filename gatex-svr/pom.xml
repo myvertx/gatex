@@ -46,12 +46,6 @@
             <artifactId>vertx-json-schema</artifactId>
 			<scope>provided</scope>
         </dependency>
-        <!-- 代码生成-->
-        <dependency>
-            <groupId>io.vertx</groupId>
-            <artifactId>vertx-codegen</artifactId>
-            <scope>provided</scope>
-        </dependency>
         <dependency>
             <groupId>io.vertx</groupId>
             <artifactId>vertx-junit5</artifactId>
@@ -103,6 +97,8 @@
 			<scope>provided</scope>
         </dependency>
 
+        <!-- 代码生成-->
+		<!-- lombok的依赖必须在最前面，否则其它生成器在没有lombok生成代码时，有可能会失效-->
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
