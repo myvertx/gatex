@@ -18,22 +18,37 @@
 				</excludes>
 			</unpackOptions>
 			<excludes>
-				<exclude>io.vertx:vertx-auth-common</exclude>
-				<exclude>io.vertx:vertx-bridge-common</exclude>
-				<exclude>io.vertx:vertx-config</exclude>
-				<exclude>io.vertx:vertx-core</exclude>
-				<exclude>io.vertx:vertx-http-proxy</exclude>
-				<exclude>io.vertx:vertx-json-schema</exclude>
-				<exclude>io.vertx:vertx-web</exclude>
-				<exclude>io.vertx:vertx-web-common</exclude>
+				<exclude>io.vertx:*</exclude>
 				<exclude>io.netty:*</exclude>
 				<exclude>org.slf4j:*</exclude>
-				<exclude>com.fasterxml.jackson.core:*</exclude>
-				<exclude>com.fasterxml.jackson.anntation:*</exclude>
-				<exclude>com.fasterxml.jackson.databind:*</exclude>
-				<exclude>com.fasterxml.jackson.datatype:jackson-datatype-jsr310</exclude>
+				<exclude>com.fasterxml.jackson.*</exclude>
 				<exclude>org.apache.commons:commons-lang3</exclude>
 				<exclude>org.apache.logging.log4j:*</exclude>
+				<exclude>com.google.inject:guice</exclude>
+				<exclude>javax.inject:*</exclude>
+				<exclude>com.oracle.database.jdbc.debug:*</exclude>
+				<exclude>org.mapstruct:mapstruct</exclude>
+				<exclude>aopalliance:aopalliance</exclude>
+				<exclude>org.bouncycastle:*</exclude>
+				<exclude>ch.qos.logback:*</exclude>
+				<exclude>com.google.guava:*</exclude>
+				<exclude>com.google.errorprone:error_prone_annotations</exclude>
+				<exclude>com.google.j2objc:j2objc-annotations</exclude>
+				<exclude>org.checkerframework:checker-qual</exclude>
+				<exclude>com.ongres.*</exclude>
+				<exclude>org.apache.curator:*</exclude>
+				<exclude>org.apache.zookeeper:*</exclude>
+				<exclude>org.apache.commons:commons-lang3</exclude>
+				<exclude>org.apache.yetus:audience-annotations</exclude>
+				<exclude>commons-io:commons-io</exclude>
+				<exclude>com.google.code.findbugs:jsr305</exclude>
+				<exclude>org.apache.pulsar:*</exclude>
+				<exclude>javax.ws.rs:javax.ws.rs-api</exclude>
+				<exclude>com.sun.activation:javax.activation</exclude>
+				<exclude>javax.validation:validation-api</exclude>
+				<exclude>net.jcip:jcip-annotations</exclude>
+				<exclude>com.beust:jcommander</exclude>
+				<exclude>org.codehaus.groovy:groovy</exclude>
 			</excludes>
 		</dependencySet>
 	</dependencySets>
