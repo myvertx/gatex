@@ -1,8 +1,8 @@
 package myvertx.gatex.api;
 
-import java.util.Map;
-
 import lombok.Data;
+
+import java.util.Map;
 
 @Data
 public class GatexRoute {
@@ -10,12 +10,12 @@ public class GatexRoute {
     /**
      * 请求的来源
      */
-    private Src                 src;
+    private Src src;
 
     /**
      * 转发的目的地
      */
-    private Dst                 dst;
+    private Dst dst;
 
     /**
      * 断言列表
@@ -24,9 +24,8 @@ public class GatexRoute {
 
     /**
      * 来源配置
-     *
+     * <p>
      * path和regexPath可以同时使用，是or的逻辑
-     *
      */
     @Data
     public static class Src {
@@ -52,32 +51,32 @@ public class GatexRoute {
         /**
          * 目的地的主机名(如果是本机静态网站，请填static，且不用填写port项)
          */
-        private String              host;
+        private String  host;
         /**
          * 目的地的端口号
          */
-        private Integer             port;
+        private Integer port;
         /**
          * 静态网站的HistoryMode(Hash/Html5/Memory)，默认为Html5
          */
-        private String              historyMode = "Html5";
-
+        private String  historyMode    = "Html5";
+        /**
+         * 是否内网穿透
+         */
+        private Boolean isTunnelServer = false;
         /**
          * 客户端的配置选项
          * httpClientOptions
          */
         private Map<String, Object> client;
-
         /**
          * 前置过滤器
          */
         private Map<String, Object> preFilters;
-
         /**
          * 后置过滤器
          */
         private Map<String, Object> postFilters;
-
         /**
          * 代理拦截器
          */

@@ -16,7 +16,7 @@ import io.vertx.httpproxy.ProxyResponse;
 import lombok.extern.slf4j.Slf4j;
 import myvertx.gatex.api.GatexProxyInterceptorFactory;
 import rebue.wheel.vertx.httpproxy.ProxyInterceptorEx;
-import rebue.wheel.vertx.httpproxy.impl.BufferingWriteStreamEx;
+import rebue.wheel.vertx.httpproxy.impl.BufferingWriteStream;
 
 /**
  * 给html内容中的链接补上前缀的代理拦截器工厂
@@ -52,7 +52,7 @@ public class HtmlReplaceProxyInterceptorFactory implements GatexProxyInterceptor
                 log.debug("state code: {}; content-type: {}", statusCode, contentType);
                 if (statusCode == 200 && StringUtils.isNotBlank(contentType) && contentType.contains("text/html")) {
                     final Body                   body   = proxyResponse.getBody();
-                    final BufferingWriteStreamEx buffer = new BufferingWriteStreamEx();
+                    final BufferingWriteStream buffer = new BufferingWriteStream();
                     return body.stream().pipeTo(buffer).compose(v -> {
                         String content = buffer.content().toString();
                         for (final Object option : replaceOptions) {

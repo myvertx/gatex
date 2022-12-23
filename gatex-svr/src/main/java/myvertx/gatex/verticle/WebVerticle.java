@@ -1,46 +1,38 @@
 package myvertx.gatex.verticle;
 
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.ServiceLoader;
-
-import javax.inject.Inject;
-
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpClientOptions;
 import io.vertx.core.http.HttpMethod;
+import io.vertx.core.http.RequestOptions;
 import io.vertx.core.impl.Arguments;
 import io.vertx.core.json.JsonObject;
+import io.vertx.core.net.SocketAddress;
 import io.vertx.ext.web.Route;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.handler.StaticHandler;
 import io.vertx.ext.web.proxy.handler.ProxyHandler;
 import lombok.extern.slf4j.Slf4j;
-import myvertx.gatex.api.GatexFilterFactory;
-import myvertx.gatex.api.GatexMatcher;
-import myvertx.gatex.api.GatexPredicater;
-import myvertx.gatex.api.GatexPredicaterFactory;
-import myvertx.gatex.api.GatexProxyInterceptorFactory;
-import myvertx.gatex.api.GatexRoute;
+import myvertx.gatex.api.*;
 import myvertx.gatex.api.GatexRoute.Dst;
 import myvertx.gatex.config.MainProperties;
 import rebue.wheel.vertx.httpproxy.HttpProxyEx;
 import rebue.wheel.vertx.httpproxy.ProxyInterceptorEx;
 import rebue.wheel.vertx.verticle.AbstractWebVerticle;
-import rebue.wheel.vertx.web.proxy.handler.impl.ProxyHandlerExImpl;
+import rebue.wheel.vertx.web.proxy.handler.impl.ProxyHandlerImplEx;
+
+import javax.inject.Inject;
+import java.util.*;
 
 @Slf4j
 public class WebVerticle extends AbstractWebVerticle {
     @Inject
-    private MainProperties                                  mainProperties;
+    private MainProperties mainProperties;
 
-    private final Map<String, GatexPredicaterFactory>       _predicaterFactories       = new HashMap<>();
+    private final Map<String, GatexPredicaterFactory> _predicaterFactories = new HashMap<>();
 
-    private final Map<String, GatexMatcher>                 _matchers                  = new HashMap<>();
+    private final Map<String, GatexMatcher> _matchers = new HashMap<>();
 
-    private final Map<String, GatexFilterFactory>           _filterFactories           = new HashMap<>();
+    private final Map<String, GatexFilterFactory> _filterFactories = new HashMap<>();
 
     private final Map<String, GatexProxyInterceptorFactory> _proxyInterceptorFactories = new HashMap<>();
 
@@ -168,15 +160,26 @@ public class WebVerticle extends AbstractWebVerticle {
         log.info("创建HTTP代理");
         // 获取HttpClientOptions
         final HttpClientOptions httpClientOptions = dst.getClient() == null ? new HttpClientOptions()
-                : new HttpClientOptions(JsonObject.mapFrom(dst.getClient()));
+            : new HttpClientOptions(JsonObject.mapFrom(dst.getClient()));
         // 创建httpClient
-        final HttpClient        httpClient        = this.vertx.createHttpClient(httpClientOptions);
+        final HttpClient httpClient = this.vertx.createHttpClient(httpClientOptions);
         // 创建Http代理
-        final HttpProxyEx       httpProxy         = HttpProxyEx.reverseProxy(httpClient).origin(dst.getPort(), dst.getHost());
+        HttpProxyEx httpProxy = HttpProxyEx.reverseProxy(httpClient);
+        if (!dst.getIsTunnelServer()) {
+            httpProxy.origin(dst.getPort(), dst.getHost());
+        } else {
+            httpProxy.originRequestProvider((req, client) -> {
+                return client.request(new RequestOptions()
+                    .setServer(SocketAddress.inetSocketAddress(dst.getPort(), dst.getHost()))
+                    .putHeader("Host", dst.getHost() + ":" + dst.getPort())
+                );
+            });
+        }
+
         log.info("给HTTP代理添加代理拦截器");
         addProxyInterceptors(httpProxy, dst.getProxyInterceptors());
         log.info("创建代理处理器");
-        final ProxyHandler proxyHandler = new ProxyHandlerExImpl(httpProxy);
+        final ProxyHandler proxyHandler = new ProxyHandlerImplEx(httpProxy);
 
         log.info("遍历当前循环的路由列表中的每一个路由，并添加代理处理器");
         routes.forEach(route -> {
