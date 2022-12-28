@@ -59,11 +59,11 @@ public class GatexRoute {
         /**
          * 静态网站的HistoryMode(Hash/Html5/Memory)，默认为Html5
          */
-        private String  historyMode    = "Html5";
+        private String              historyMode    = "Html5";
         /**
-         * 是否内网穿透
+         * 是否反向代理
          */
-        private Boolean isTunnelServer = false;
+        private Boolean             isReverseProxy = false;
         /**
          * 客户端的配置选项
          * httpClientOptions
