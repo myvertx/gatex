@@ -165,15 +165,15 @@ public class WebVerticle extends AbstractWebVerticle {
         final HttpClient httpClient = this.vertx.createHttpClient(httpClientOptions);
         // 创建Http代理
         HttpProxyEx httpProxy = HttpProxyEx.reverseProxy(httpClient);
-        if (!dst.getIsTunnelServer()) {
+        if (!dst.getIsReverseProxy()) {
             httpProxy.origin(dst.getPort(), dst.getHost());
         } else {
-            httpProxy.originRequestProvider((req, client) -> {
-                return client.request(new RequestOptions()
-                    .setServer(SocketAddress.inetSocketAddress(dst.getPort(), dst.getHost()))
-                    .putHeader("Host", dst.getHost() + ":" + dst.getPort())
-                );
-            });
+            httpProxy.originRequestProvider((req, client) -> client.request(new RequestOptions()
+                .setServer(SocketAddress.inetSocketAddress(dst.getPort(), dst.getHost()))
+                .putHeader("Host", dst.getHost() + ":" + dst.getPort())
+                // 在headers中加入了Host后，Content-Length的值就对不上了，加上这个无视它
+                .putHeader("Transfer-Encoding", "chunked")
+            ));
         }
 
         log.info("给HTTP代理添加代理拦截器");

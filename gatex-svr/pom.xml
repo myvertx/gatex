@@ -23,11 +23,6 @@
 
         <dependency>
             <groupId>io.vertx</groupId>
-            <artifactId>vertx-config-consul</artifactId>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>io.vertx</groupId>
             <artifactId>vertx-config</artifactId>
 			<scope>provided</scope>
         </dependency>
