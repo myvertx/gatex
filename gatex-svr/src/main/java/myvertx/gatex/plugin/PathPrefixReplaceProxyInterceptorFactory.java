@@ -15,37 +15,37 @@ import rebue.wheel.vertx.httpproxy.ProxyInterceptorEx;
 import java.util.Iterator;
 
 /**
- * 替换请求路径的代理拦截器工厂
- * 代理请求的uri会被替换为设置的链接
+ * 替换请求路径前缀的代理拦截器工厂
  */
 @Slf4j
-public class PathReplaceProxyInterceptorFactory implements GatexProxyInterceptorFactory {
+public class PathPrefixReplaceProxyInterceptorFactory implements GatexProxyInterceptorFactory {
     @Override
     public String name() {
-        return "pathReplace";
+        return "pathPrefixReplace";
     }
 
     @Override
     public ProxyInterceptorEx create(Vertx vertx, final Object options, Injector injector) {
         if (options == null) {
-            log.warn("并未配置要替换的路径");
+            log.warn("并未配置替换路径前缀");
             return null;
         }
-        final String replacePath = (String) options;
-        if (StringUtils.isBlank(replacePath)) {
-            log.warn("并未配置要替换的路径");
+        final String pathPrefixReplace = (String) options;
+        if (StringUtils.isBlank(pathPrefixReplace)) {
+            log.warn("并未配置替换路径前缀");
             return null;
         }
-        Iterator<String> detailIterator = Splitter.on(':').trimResults().split(replacePath).iterator();
+        Iterator<String> detailIterator = Splitter.on(':').trimResults().split(pathPrefixReplace).iterator();
         String           src            = detailIterator.next();
         String           dst            = detailIterator.hasNext() ? detailIterator.next() : "";
+
         return new ProxyInterceptorEx() {
             @Override
             public Future<ProxyResponse> handleProxyRequest(final ProxyContext proxyContext) {
-                log.debug("pathReplace.handleProxyRequest 替换请求的链接: {}", replacePath);
+                log.debug("pathPrefixReplace.handleProxyRequest 替换请求链接的前缀: {}", pathPrefixReplace);
 
                 final ProxyRequest request = proxyContext.request();
-                final String       uri     = request.getURI().replaceAll(src, dst);
+                final String       uri     = request.getURI().replaceFirst("^" + src, dst);
                 request.setURI(uri);
                 log.debug("请求地址: {}", uri);
 
