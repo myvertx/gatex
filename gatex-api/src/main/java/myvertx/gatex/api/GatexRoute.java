@@ -51,11 +51,11 @@ public class GatexRoute {
         /**
          * 目的地的主机名(如果是本机静态网站，请填static，且不用填写port项)
          */
-        private String  host;
+        private String              host;
         /**
          * 目的地的端口号
          */
-        private Integer port;
+        private Integer             port;
         /**
          * 静态网站的HistoryMode(Hash/Html5/Memory)，默认为Html5
          */
@@ -64,6 +64,15 @@ public class GatexRoute {
          * 是否反向代理
          */
         private Boolean             isReverseProxy = false;
+        /**
+         * 是否websocket代理
+         */
+        private Boolean             isWebSocket    = false;
+        /**
+         * SockJSHandler的配置选项
+         * SockJSHandlerOptions
+         */
+        private Map<String, Object> sockJsHandler;
         /**
          * 客户端的配置选项
          * httpClientOptions

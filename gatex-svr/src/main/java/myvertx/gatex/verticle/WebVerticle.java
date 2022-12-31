@@ -10,6 +10,8 @@ import io.vertx.core.net.SocketAddress;
 import io.vertx.ext.web.Route;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.handler.StaticHandler;
+import io.vertx.ext.web.handler.sockjs.SockJSHandler;
+import io.vertx.ext.web.handler.sockjs.SockJSHandlerOptions;
 import io.vertx.ext.web.proxy.handler.ProxyHandler;
 import lombok.extern.slf4j.Slf4j;
 import myvertx.gatex.api.*;
@@ -163,6 +165,32 @@ public class WebVerticle extends AbstractWebVerticle {
             : new HttpClientOptions(JsonObject.mapFrom(dst.getClient()));
         // 创建httpClient
         final HttpClient httpClient = this.vertx.createHttpClient(httpClientOptions);
+
+        if (dst.getIsWebSocket()) {
+            log.info("WebSocket代理");
+            SockJSHandlerOptions options = dst.getSockJsHandler() == null ? new SockJSHandlerOptions()
+                : new SockJSHandlerOptions(JsonObject.mapFrom(dst.getSockJsHandler()));
+            SockJSHandler sockJSHandler = SockJSHandler.create(vertx, options);
+            log.info("遍历当前循环的路由列表中的每一个路由，并添加WebSocket代理处理器");
+            routes.forEach(route -> {
+                log.debug("路由: {}", route.getPath());
+                route.subRouter(sockJSHandler.socketHandler(sockJSSocket -> {
+                    httpClient.webSocket(dst.getPort(), dst.getHost(), route.getPath())
+                        .onSuccess(webSocket -> {
+                            webSocket.handler(data -> {
+                                log.debug("received dst websocket data: {}", data);
+                                sockJSSocket.write(data);
+                            });
+                            sockJSSocket.handler(data -> {
+                                log.debug("received src websocket data: {}", data);
+                                webSocket.write(data);
+                            });
+                        });
+                }));
+            });
+            return;
+        }
+
         // 创建Http代理
         HttpProxyEx httpProxy = HttpProxyEx.reverseProxy(httpClient);
         if (!dst.getIsReverseProxy()) {
