@@ -191,11 +191,11 @@ public class WebVerticle extends AbstractWebVerticle {
             return;
         }
 
-        // 创建Http代理
         HttpProxyEx httpProxy = HttpProxyEx.reverseProxy(httpClient);
         if (!dst.getIsReverseProxy()) {
             httpProxy.origin(dst.getPort(), dst.getHost());
         } else {
+            // 反向代理要往headers中加入Host为目的地的地址，以此覆盖原来最初请求填写的Host
             httpProxy.originRequestProvider((req, client) -> client.request(new RequestOptions()
                 .setServer(SocketAddress.inetSocketAddress(dst.getPort(), dst.getHost()))
                 .putHeader("Host", dst.getHost() + ":" + dst.getPort())

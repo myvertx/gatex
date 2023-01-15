@@ -45,7 +45,8 @@ public class PathReplaceProxyInterceptorFactory implements GatexProxyInterceptor
                 log.debug("pathReplace.handleProxyRequest 替换请求的链接: {}", replacePath);
 
                 final ProxyRequest request = proxyContext.request();
-                final String       uri     = request.getURI().replaceAll(src, dst);
+                String             uri     = request.getURI();
+                uri = request.getURI().replaceAll(StringUtils.isBlank(src) ? uri : src, dst);
                 request.setURI(uri);
                 log.debug("请求地址: {}", uri);
 
