@@ -174,7 +174,7 @@ public class WebVerticle extends AbstractWebVerticle {
             log.info("遍历当前循环的路由列表中的每一个路由，并添加WebSocket代理处理器");
             routes.forEach(route -> {
                 log.debug("路由: {}", route.getPath());
-                route.subRouter(sockJSHandler.socketHandler(sockJSSocket -> {
+                route.subRouter(sockJSHandler.socketHandler(sockJSSocket ->
                     httpClient.webSocket(dst.getPort(), dst.getHost(), route.getPath())
                         .onSuccess(webSocket -> {
                             webSocket.handler(data -> {
@@ -185,8 +185,7 @@ public class WebVerticle extends AbstractWebVerticle {
                                 log.debug("received src websocket data: {}", data);
                                 webSocket.write(data);
                             });
-                        });
-                }));
+                        })));
             });
             return;
         }
