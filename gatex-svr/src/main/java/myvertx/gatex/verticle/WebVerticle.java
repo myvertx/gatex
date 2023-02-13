@@ -200,6 +200,7 @@ public class WebVerticle extends AbstractWebVerticle {
                 .setServer(SocketAddress.inetSocketAddress(dst.getPort(), dst.getHost()))
                 .putHeader("Host", dst.getHost() + ":" + dst.getPort())
                 // 在headers中加入了Host后，Content-Length的值就对不上了，加上这个无视它
+                .removeHeader("content-length")
                 .putHeader("Transfer-Encoding", "chunked")
             ));
         }
