@@ -30,16 +30,27 @@ public class WebVerticle extends AbstractWebVerticle {
     @Inject
     private MainProperties mainProperties;
 
-    private final Map<String, GatexPredicaterFactory> _predicaterFactories = new HashMap<>();
-
-    private final Map<String, GatexMatcher> _matchers = new HashMap<>();
-
-    private final Map<String, GatexFilterFactory> _filterFactories = new HashMap<>();
-
+    /**
+     * 断言器工厂列表
+     */
+    private final Map<String, GatexPredicaterFactory>       _predicaterFactories       = new HashMap<>();
+    /**
+     * 匹配器列表
+     */
+    private final Map<String, GatexMatcher>                 _matchers                  = new HashMap<>();
+    /**
+     * 过滤器工厂列表
+     */
+    private final Map<String, GatexFilterFactory>           _filterFactories           = new HashMap<>();
+    /**
+     * 代理拦截器工厂列表
+     */
     private final Map<String, GatexProxyInterceptorFactory> _proxyInterceptorFactories = new HashMap<>();
 
     /**
      * 根据配置中的路由列表来配置路由
+     *
+     * @param router 路由器
      */
     @Override
     protected void configRouter(final Router router) {
