@@ -1,11 +1,7 @@
 package myvertx.gatex.plugin;
 
-import java.util.List;
-import java.util.Map;
-
+import com.google.common.base.Splitter;
 import com.google.inject.Injector;
-import org.apache.commons.lang3.StringUtils;
-
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
@@ -15,14 +11,18 @@ import io.vertx.httpproxy.ProxyContext;
 import io.vertx.httpproxy.ProxyResponse;
 import lombok.extern.slf4j.Slf4j;
 import myvertx.gatex.api.GatexProxyInterceptorFactory;
+import org.apache.commons.lang3.StringUtils;
 import rebue.wheel.vertx.httpproxy.ProxyInterceptorEx;
 import rebue.wheel.vertx.httpproxy.impl.BufferingWriteStream;
+
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 /**
  * 给html内容中的链接补上前缀的代理拦截器工厂
  *
  * @author zbz
- *
  */
 @Slf4j
 public class HtmlReplaceProxyInterceptorFactory implements GatexProxyInterceptorFactory {
@@ -39,9 +39,8 @@ public class HtmlReplaceProxyInterceptorFactory implements GatexProxyInterceptor
         }
 
         if (!(options instanceof final List<?> replaceOptions)) {
-            throw new RuntimeException("配置错误: main.routes[].dst.proxyInterceptors[].htmlReplace属性必须是String或String[]类型");
+            throw new RuntimeException("配置错误: main.routes[].dst.proxyInterceptors[].htmlReplace属性必须是String[]类型");
         }
-
         return new ProxyInterceptorEx() {
             @Override
             public Future<Void> handleProxyResponse(final ProxyContext proxyContext) {
@@ -51,15 +50,15 @@ public class HtmlReplaceProxyInterceptorFactory implements GatexProxyInterceptor
                 final String        contentType   = proxyResponse.headers().get(HttpHeaders.CONTENT_TYPE);
                 log.debug("state code: {}; content-type: {}", statusCode, contentType);
                 if (statusCode == 200 && StringUtils.isNotBlank(contentType) && contentType.contains("text/html")) {
-                    final Body                   body   = proxyResponse.getBody();
+                    final Body                 body   = proxyResponse.getBody();
                     final BufferingWriteStream buffer = new BufferingWriteStream();
                     return body.stream().pipeTo(buffer).compose(v -> {
                         String content = buffer.content().toString();
-                        for (final Object option : replaceOptions) {
-                            final Map<String, String> optionMap   = (Map<String, String>) option;
-                            final String              regex       = optionMap.get("regex");
-                            final String              replacement = optionMap.get("replacement");
-                            content = content.replaceAll(regex, replacement);
+                        for (final String option : (List<String>) replaceOptions) {
+                            Iterator<String> detailIterator = Splitter.on(':').trimResults().split(option).iterator();
+                            String           src            = detailIterator.next();
+                            String           dst            = detailIterator.hasNext() ? detailIterator.next() : "";
+                            content = content.replaceAll(src, dst);
                         }
 
                         // 重新设置body
