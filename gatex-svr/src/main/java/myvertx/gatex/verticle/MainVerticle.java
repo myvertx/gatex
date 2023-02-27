@@ -14,13 +14,6 @@ import java.util.ServiceLoader;
 
 @Slf4j
 public class MainVerticle extends AbstractMainVerticle {
-    private final List<GatexGuiceModule> gatexGuiceModules = new LinkedList<>();
-
-    public MainVerticle() {
-        log.info("注册Guice的模块");
-        final ServiceLoader<GatexGuiceModule> guiceModuleServiceLoader = ServiceLoader.load(GatexGuiceModule.class);
-        guiceModuleServiceLoader.forEach(this.gatexGuiceModules::add);
-    }
 
     /**
      * 添加guice模块
@@ -30,6 +23,11 @@ public class MainVerticle extends AbstractMainVerticle {
     @Override
     protected void addGuiceModules(final List<Module> guiceModules) {
         guiceModules.add(new MainModule());
+
+        log.info("通过SPI加载GatexGuice模块并加入注册Guice模块列表");
+        ServiceLoader<GatexGuiceModule> guiceModuleServiceLoader = ServiceLoader.load(GatexGuiceModule.class);
+        List<GatexGuiceModule>          gatexGuiceModules        = new LinkedList<>();
+        guiceModuleServiceLoader.forEach(gatexGuiceModules::add);
         gatexGuiceModules.forEach(gatexGuiceModule -> gatexGuiceModule.add(guiceModules));
     }
 
