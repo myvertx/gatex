@@ -1,20 +1,182 @@
 {
-    "stores": [
-        {
-            "type": "git",
-            "config": {
-                "url": "http://localhost:30000/zbz/vertx-config.git",
-                "branch": "main",
-                "user": "zbz",
-                "password": "12345678",
-                "path": "local",
-                "filesets": [
-                    {
-                        "pattern": "gatex.yml",
-                        "format": "yaml"
+    "main": {
+        "routes": [
+            {
+                "src": {
+                    "path": "/captcha/*"
+                },
+                "dst": {
+                    "host": "127.0.0.1",
+                    "port": 9000,
+                    "client": {
+                        "logActivity": true
                     }
-                ]
+                }
+            },
+            {
+                "src": {
+                    "regexPath": "^/b02/.*"
+                },
+                "dst": {
+                    "host": "127.0.0.1",
+                    "port": 9202,
+                    "client": {
+                        "logActivity": true
+                    }
+                }
+            },
+            {
+                "src": {
+                    "regexPath": "^/c02/.*"
+                },
+                "dst": {
+                    "host": "127.0.0.1",
+                    "port": 9302,
+                    "client": {
+                        "logActivity": true
+                    }
+                }
+            },
+            {
+                "src": {
+                    "path": "/bank/api/v1/payCallback"
+                },
+                "dst": {
+                    "host": "127.0.0.1",
+                    "port": 8090,
+                    "client": {
+                        "logActivity": true
+                    }
+                }
+            },
+            {
+                "src": {
+                    "regexPath": "/bank/api/v1/payCode/query"
+                },
+                "dst": {
+                    "host": "127.0.0.1",
+                    "port": 8090,
+                    "client": {
+                        "logActivity": true
+                    }
+                }
+            },
+            {
+                "src": {
+                    "regexPath": "^/bank/api/v2/.*"
+                },
+                "dst": {
+                    "host": "127.0.0.1",
+                    "port": 9302,
+                    "client": {
+                        "logActivity": true
+                    }
+                }
+            },
+            {
+                "src": {
+                    "path": "/pay/api/v1/*"
+                },
+                "dst": {
+                    "host": "127.0.0.1",
+                    "port": 9302,
+                    "client": {
+                        "logActivity": true
+                    }
+                },
+                "predicates": {
+                    "pathExclude": [
+                        "^/pay/api/v1/pay"
+                    ]
+                }
+            },
+            {
+                "src": {
+                    "path": "/pay/api/v1/pay"
+                },
+                "dst": {
+                    "host": "127.0.0.1",
+                    "port": 9302,
+                    "client": {
+                        "logActivity": true
+                    }
+                }
+            },
+            {
+                "src": {
+                    "path": "/redisweb/*"
+                },
+                "dst": {
+                    "host": "127.0.0.1",
+                    "port": 15080,
+                    "client": {
+                        "logActivity": true
+                    },
+                    "proxyInterceptors": {
+                        "htmlBase": "/redisweb"
+                    }
+                }
+            },
+            {
+                "src": {
+                    "path": "/turtest/*"
+                },
+                "dst": {
+                    "host": "127.0.0.1",
+                    "port": 9000,
+                    "client": {
+                        "logActivity": true
+                    }
+                }
+            },
+            {
+                "src": {
+                    "path": "/pay-platform/*"
+                },
+                "dst": {
+                    "host": "static"
+                }
+            },
+            {
+                "src": {
+                    "path": "/b03-web/*"
+                },
+                "dst": {
+                    "host": "static"
+                }
+            },
+            {
+                "src": {
+                    "path": "/b03/*"
+                },
+                "dst": {
+                    "host": "127.0.0.1",
+                    "port": 9203,
+                    "client": {
+                        "logActivity": true
+                    }
+                }
+            }
+        ]
+    },
+    "web": {
+        "config": {
+            "isLogging": true,
+            "isResponseTime": true,
+            "timeout": 5000,
+            "isCors": true,
+            "server": {
+                "port": 8090,
+                "logActivity": true
             }
         }
-    ]
+    },
+    "kafkaConsumer": {
+        "config": {
+            "bootstrap.servers": "localhost:9092",
+            "key.serializer": "org.apache.kafka.common.serialization.StringSerializer",
+            "value.serializer": "org.apache.kafka.common.serialization.StringSerializer",
+            "acks": "1"
+        }
+    }
 }
