@@ -41,14 +41,16 @@ public class PathPrefixReplaceProxyInterceptorFactory implements GatexProxyInter
 
         return new ProxyInterceptorEx() {
             @Override
-            public Future<ProxyResponse> handleProxyRequest(final ProxyContext proxyContext) {
-                log.debug("pathPrefixReplace.handleProxyRequest 替换请求链接的前缀: {}", pathPrefixReplace);
-
-                final ProxyRequest request = proxyContext.request();
-                final String       uri     = request.getURI().replaceFirst("^" + src, dst);
-                request.setURI(uri);
+            public void modifyProxyRequest(ProxyRequest proxyRequest) {
+                log.debug("pathPrefixReplace.modifyProxyRequest 替换请求链接的前缀: {}", pathPrefixReplace);
+                final String       uri     = proxyRequest.getURI().replaceFirst("^" + src, dst);
+                proxyRequest.setURI(uri);
                 log.debug("请求地址: {}", uri);
+            }
 
+            @Override
+            public Future<ProxyResponse> handleProxyRequest(final ProxyContext proxyContext) {
+                this.modifyProxyRequest(proxyContext.request());
                 // 继续拦截器
                 return proxyContext.sendRequest();
             }

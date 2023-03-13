@@ -41,18 +41,21 @@ public class PathReplaceProxyInterceptorFactory implements GatexProxyInterceptor
         String           dst            = detailIterator.hasNext() ? detailIterator.next() : "";
         return new ProxyInterceptorEx() {
             @Override
-            public Future<ProxyResponse> handleProxyRequest(final ProxyContext proxyContext) {
-                log.debug("pathReplace.handleProxyRequest 替换请求的链接: {}", replacePath);
-
-                final ProxyRequest request = proxyContext.request();
-                String             uri     = request.getURI();
+            public void modifyProxyRequest(ProxyRequest proxyRequest) {
+                log.debug("pathReplace.modifyProxyRequest 替换请求的链接: {}", replacePath);
+                String uri = proxyRequest.getURI();
                 uri = StringUtils.isBlank(src) ? dst : uri.replaceAll(src, dst);
-                request.setURI(uri);
+                proxyRequest.setURI(uri);
                 log.debug("请求地址: {}", uri);
+            }
 
+            @Override
+            public Future<ProxyResponse> handleProxyRequest(final ProxyContext proxyContext) {
+                this.modifyProxyRequest(proxyContext.request());
                 // 继续拦截器
                 return proxyContext.sendRequest();
             }
+
         };
     }
 }

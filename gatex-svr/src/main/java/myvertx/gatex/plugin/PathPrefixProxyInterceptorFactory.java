@@ -1,8 +1,6 @@
 package myvertx.gatex.plugin;
 
 import com.google.inject.Injector;
-import org.apache.commons.lang3.StringUtils;
-
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.httpproxy.ProxyContext;
@@ -10,6 +8,7 @@ import io.vertx.httpproxy.ProxyRequest;
 import io.vertx.httpproxy.ProxyResponse;
 import lombok.extern.slf4j.Slf4j;
 import myvertx.gatex.api.GatexProxyInterceptorFactory;
+import org.apache.commons.lang3.StringUtils;
 import rebue.wheel.vertx.httpproxy.ProxyInterceptorEx;
 
 /**
@@ -36,14 +35,16 @@ public class PathPrefixProxyInterceptorFactory implements GatexProxyInterceptorF
         }
         return new ProxyInterceptorEx() {
             @Override
-            public Future<ProxyResponse> handleProxyRequest(final ProxyContext proxyContext) {
-                log.debug("pathPrefix.handleProxyRequest 给请求链接添加前缀: {}", pathPrefix);
-
-                final ProxyRequest request = proxyContext.request();
-                final String       uri     = pathPrefix + request.getURI();
-                request.setURI(uri);
+            public void modifyProxyRequest(ProxyRequest proxyRequest) {
+                log.debug("pathPrefix.modifyProxyRequest 给请求链接添加前缀: {}", pathPrefix);
+                final String uri = pathPrefix + proxyRequest.getURI();
+                proxyRequest.setURI(uri);
                 log.debug("请求地址: {}", uri);
+            }
 
+            @Override
+            public Future<ProxyResponse> handleProxyRequest(final ProxyContext proxyContext) {
+                this.modifyProxyRequest(proxyContext.request());
                 // 继续拦截器
                 return proxyContext.sendRequest();
             }
