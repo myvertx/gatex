@@ -209,8 +209,8 @@ public class WebVerticle extends AbstractWebVerticle {
             httpProxy.originRequestProvider((req, client) -> client.request(new RequestOptions()
                 .setServer(SocketAddress.inetSocketAddress(dst.getPort(), dst.getHost()))
                 .putHeader("Host", dst.getHost() + ":" + dst.getPort())
-                // 在headers中加入了Host后，Content-Length的值就对不上了，加上这个无视它
-                .removeHeader("content-length")
+                // 在headers中加入了Host后，Content-Length的值就对不上了，将其删除并加上chunked无视它
+                .removeHeader("Content-Length")
                 .putHeader("Transfer-Encoding", "chunked")
             ));
         }
