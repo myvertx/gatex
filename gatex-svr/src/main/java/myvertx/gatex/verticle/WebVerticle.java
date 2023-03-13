@@ -123,13 +123,17 @@ public class WebVerticle extends AbstractWebVerticle {
             Arguments.require(dst != null, "main.routes[].dst不能为null");
             Arguments.require(dst.getHost() != null, "main.routes[].dst.host不能为null");
 
-            if ("static".equalsIgnoreCase(dst.getHost())) {
-                // 配置静态资源类的路由
-                configStaticRoutes(gatexRouteConfig, routes);
-            }
-            // 代理路由
-            else {
-                configProxyRoute(gatexRouteConfig, routes, dst);
+            try {
+                if ("static".equalsIgnoreCase(dst.getHost())) {
+                    // 配置静态资源类的路由
+                    configStaticRoutes(gatexRouteConfig, routes);
+                }
+                // 代理路由
+                else {
+                    configProxyRoute(gatexRouteConfig, routes, dst);
+                }
+            } catch (Exception err) {
+                log.error("配置路由出错", err);
             }
             log.info("********************************************************");
         }
