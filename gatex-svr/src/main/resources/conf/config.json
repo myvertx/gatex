@@ -3,6 +3,21 @@
         "routes": [
             {
                 "src": {
+                    "path": "/ttyd/*"
+                },
+                "dst": {
+                    "host": "127.0.0.1",
+                    "port": 7681,
+                    "client": {
+                        "logActivity": true
+                    },
+                    "proxyInterceptors": {
+                        "pathPrefixReplace": "/ttyd"
+                    }
+                }
+            },
+            {
+                "src": {
                     "path": "/captcha/*"
                 },
                 "dst": {
@@ -163,11 +178,11 @@
         "config": {
             "isLogging": true,
             "isResponseTime": true,
-            "timeout": 5000,
             "isCors": true,
             "server": {
                 "port": 8090,
-                "logActivity": true
+                "logActivity": true,
+                "perMessageWebSocketCompressionSupported": false
             }
         }
     },

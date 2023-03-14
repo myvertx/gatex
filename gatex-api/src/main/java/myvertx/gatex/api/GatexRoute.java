@@ -57,6 +57,20 @@ public class GatexRoute {
          */
         private Integer             port;
         /**
+         * 请求目的地的路径(默认不设置，请求路径为来源请求的路径，如果设置，请求路径将由此值替换)
+         */
+        private String              path;
+        /**
+         * 请求目的地路径的前缀(默认不设置，如果设置，请求路径的前面会添加此值)
+         */
+        private String              pathPrefix;
+        /**
+         * 替换请求目的地的路径(默认不设置，如果设置，此值将替换请求路径的前面部分)
+         * 设置的值应为":"分隔的两节，第1节为要被替换的部分，第2节为用来替换的值
+         * 如果设置的值缺少第2节，意思是请求路径直接去掉第1节的部分
+         */
+        private String              pathPrefixReplace;
+        /**
          * 静态网站的HistoryMode(Hash/Html5/Memory)，默认为Html5
          */
         private String              historyMode    = "Html5";
@@ -64,15 +78,6 @@ public class GatexRoute {
          * 是否反向代理
          */
         private Boolean             isReverseProxy = false;
-        /**
-         * 是否websocket代理
-         */
-        private Boolean             isWebSocket    = false;
-        /**
-         * SockJSHandler的配置选项
-         * SockJSHandlerOptions
-         */
-        private Map<String, Object> sockJsHandler;
         /**
          * 客户端的配置选项
          * httpClientOptions
