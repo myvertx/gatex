@@ -1,13 +1,12 @@
 package myvertx.gatex.verticle;
 
+import com.google.inject.AbstractModule;
 import com.google.inject.Module;
 import io.vertx.core.Verticle;
 import lombok.extern.slf4j.Slf4j;
-import myvertx.gatex.api.GatexGuiceModule;
 import myvertx.gatex.inject.MainModule;
 import rebue.wheel.vertx.verticle.AbstractMainVerticle;
 
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
@@ -25,10 +24,8 @@ public class MainVerticle extends AbstractMainVerticle {
         guiceModules.add(new MainModule());
 
         log.info("通过SPI加载GatexGuice模块并加入注册Guice模块列表");
-        ServiceLoader<GatexGuiceModule> guiceModuleServiceLoader = ServiceLoader.load(GatexGuiceModule.class);
-        List<GatexGuiceModule>          gatexGuiceModules        = new LinkedList<>();
-        guiceModuleServiceLoader.forEach(gatexGuiceModules::add);
-        gatexGuiceModules.forEach(gatexGuiceModule -> gatexGuiceModule.add(guiceModules));
+        ServiceLoader<AbstractModule> guiceModuleServiceLoader = ServiceLoader.load(AbstractModule.class);
+        guiceModuleServiceLoader.forEach(guiceModules::add);
     }
 
     /**

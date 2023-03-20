@@ -15,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import myvertx.gatex.api.*;
 import myvertx.gatex.api.GatexRoute.Dst;
 import myvertx.gatex.config.MainProperties;
+import org.apache.commons.lang3.StringUtils;
 import rebue.wheel.vertx.httpproxy.HttpProxyEx;
 import rebue.wheel.vertx.httpproxy.ProxyInterceptorEx;
 import rebue.wheel.vertx.verticle.AbstractWebVerticle;
@@ -194,6 +195,15 @@ public class WebVerticle extends AbstractWebVerticle {
         }
 
         log.info("给HTTP代理添加代理拦截器");
+        if (StringUtils.isNotBlank(dst.getPath())) {
+            dst.getProxyInterceptors().put("pathReplace", dst.getPath());
+        }
+        if (StringUtils.isNotBlank(dst.getPathPrefix())) {
+            dst.getProxyInterceptors().put("pathPrefix", dst.getPathPrefix());
+        }
+        if (StringUtils.isNotBlank(dst.getPathPrefixReplace())) {
+            dst.getProxyInterceptors().put("pathPrefixReplace", dst.getPathPrefixReplace());
+        }
         addProxyInterceptors(httpProxy, dst.getProxyInterceptors());
         log.info("创建代理处理器");
         final ProxyHandler proxyHandler = new ProxyHandlerImplEx(httpProxy);
@@ -271,15 +281,17 @@ public class WebVerticle extends AbstractWebVerticle {
      * @param proxyInterceptors 代理拦截器列表
      */
     private void addProxyInterceptors(final HttpProxyEx httpProxy, final Map<String, Object> proxyInterceptors) {
-        if (proxyInterceptors != null) {
-            proxyInterceptors.forEach((key, value) -> {
-                log.debug("proxyInterceptor {}: {}", key, value);
-                final GatexProxyInterceptorFactory factory = this._proxyInterceptorFactories.get(key);
-                Arguments.require(factory != null, "找不到名为" + key + "的代理拦截器");
-                final ProxyInterceptorEx proxyInterceptor = factory.create(this.vertx, value, this.injector);
-                httpProxy.addInterceptor(proxyInterceptor);
-            });
+        if (proxyInterceptors == null || proxyInterceptors.isEmpty()) {
+            return;
         }
+
+        proxyInterceptors.forEach((key, value) -> {
+            log.debug("proxyInterceptor {}: {}", key, value);
+            final GatexProxyInterceptorFactory factory = this._proxyInterceptorFactories.get(key);
+            Arguments.require(factory != null, "找不到名为" + key + "的代理拦截器");
+            final ProxyInterceptorEx proxyInterceptor = factory.create(this.vertx, value, this.injector);
+            httpProxy.addInterceptor(proxyInterceptor);
+        });
     }
 
     /**
@@ -289,14 +301,16 @@ public class WebVerticle extends AbstractWebVerticle {
      * @param filters 要添加的过滤器列表
      */
     private void addFilters(final Route route, final Map<String, Object> filters) {
-        if (filters != null) {
-            filters.forEach((key, value) -> {
-                log.debug("filter {}: {}", key, value);
-                final GatexFilterFactory factory = this._filterFactories.get(key);
-                Arguments.require(factory != null, "找不到名为" + key + "的过滤器");
-                route.handler(factory.create(this.vertx, value));
-            });
+        if (filters == null || filters.isEmpty()) {
+            return;
         }
+
+        filters.forEach((key, value) -> {
+            log.debug("filter {}: {}", key, value);
+            final GatexFilterFactory factory = this._filterFactories.get(key);
+            Arguments.require(factory != null, "找不到名为" + key + "的过滤器");
+            route.handler(factory.create(this.vertx, value));
+        });
     }
 
 }

@@ -2,6 +2,7 @@ package myvertx.gatex.api;
 
 import lombok.Data;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 @Data
@@ -73,11 +74,11 @@ public class GatexRoute {
         /**
          * 静态网站的HistoryMode(Hash/Html5/Memory)，默认为Html5
          */
-        private String              historyMode    = "Html5";
+        private String              historyMode       = "Html5";
         /**
          * 是否反向代理
          */
-        private Boolean             isReverseProxy = false;
+        private Boolean             isReverseProxy    = false;
         /**
          * 客户端的配置选项
          * httpClientOptions
@@ -94,7 +95,7 @@ public class GatexRoute {
         /**
          * 代理拦截器
          */
-        private Map<String, Object> proxyInterceptors;
+        private Map<String, Object> proxyInterceptors = new LinkedHashMap<>();
     }
 
 }
