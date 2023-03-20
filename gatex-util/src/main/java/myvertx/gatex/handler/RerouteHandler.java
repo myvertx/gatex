@@ -16,8 +16,18 @@ public interface RerouteHandler {
      */
     boolean isReroute(String sResponseBody);
 
+    /**
+     * 获取重新路由的请求body
+     *
+     * @param sOriginRequestBody 原始的请求body(默认重新路由的请求body就是原始路由的请求body)
+     * @return 重新路由的请求body
+     */
     default Future<String> getRerouteRequestBody(String sOriginRequestBody) {
         return Future.succeededFuture(sOriginRequestBody);
     }
 
+    /**
+     * 获取重新路由的请求路径
+     */
+    String getReroutePath();
 }

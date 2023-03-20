@@ -87,8 +87,6 @@ public class ProxyInterceptorUtils {
         @SuppressWarnings("unchecked") final Map<String, Object> optionsMap    = (Map<String, Object>) options;
         final Object                                             rerouteObject = optionsMap.get("reroute");
         Arguments.require(rerouteObject != null, "并未配置" + interceptorName + ".reroute的值");
-        String reroutePath = (String) rerouteObject;
-        Arguments.require(StringUtils.isNotBlank(reroutePath), interceptorName + ".reroute的值不能为空");
 
         return new ProxyInterceptorEx() {
             @Override
@@ -156,8 +154,8 @@ public class ProxyInterceptorUtils {
                         routingContext.request().headers().set("Transfer-Encoding", "chunked");
                         routingContext.request().headers().remove("content-length");
                     }
-                    log.debug("ctx.reroute: {}, {}", reroutePath, sOriginRequestBody);
-                    routingContext.reroute(reroutePath);
+                    log.debug("ctx.reroute: {}, {}", rerouteHandler.getReroutePath(), sOriginRequestBody);
+                    routingContext.reroute(rerouteHandler.getReroutePath());
                 }).onFailure(routingContext::fail);
                 return false;
             }
@@ -188,8 +186,9 @@ public class ProxyInterceptorUtils {
         Producer<String>   producer     = pulsarClient.newProducer(Schema.STRING).topic(sTopic).create();
         return ProxyInterceptorUtils.createProxyInterceptorA(interceptorName, options, (proxyContext, sRequestBody) -> {
             try {
-                log.debug("{}准备发送消息: {}", interceptorName, sRequestBody);
-                producer.send(sRequestBody);
+                String uri = proxyContext.request().getURI();
+                log.debug("{}准备发送消息: {} {}", interceptorName, uri, sRequestBody);
+                producer.send(uri + " " + sRequestBody);
             } catch (final PulsarClientException e) {
                 log.error(interceptorName + "发送消息出现异常", e);
                 throw new RuntimeException(e);
