@@ -22,10 +22,6 @@ public class MainVerticle extends AbstractMainVerticle {
     @Override
     protected void addGuiceModules(final List<Module> guiceModules) {
         guiceModules.add(new MainModule());
-
-        log.info("通过SPI加载GatexGuice模块并加入注册Guice模块列表");
-        ServiceLoader<AbstractModule> guiceModuleServiceLoader = ServiceLoader.load(AbstractModule.class);
-        guiceModuleServiceLoader.forEach(guiceModules::add);
     }
 
     /**
