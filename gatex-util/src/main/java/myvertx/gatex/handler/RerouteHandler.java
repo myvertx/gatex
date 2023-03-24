@@ -11,10 +11,11 @@ public interface RerouteHandler {
     /**
      * 判断是否需要重新路由
      *
+     * @param sRequestBody  之前请求的body
      * @param sResponseBody 之前请求响应回来的body
      * @return 是否需要重新路由
      */
-    boolean isReroute(String sResponseBody);
+    boolean isReroute(String sRequestBody, String sResponseBody);
 
     /**
      * 获取重新路由的请求body

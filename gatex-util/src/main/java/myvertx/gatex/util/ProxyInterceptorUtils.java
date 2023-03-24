@@ -111,10 +111,12 @@ public class ProxyInterceptorUtils {
                 final BufferingWriteStream buffer = new BufferingWriteStream();
                 log.debug("准备读取响应的body");
                 return body.stream().pipeTo(buffer).compose(v -> {
+                    String sRequestBody = proxyContext.get("originRequestBody", String.class);
+                    log.debug("request body: {}", sRequestBody);
                     final String sResponseBody = buffer.content().toString();
                     log.debug("response body: {}", sResponseBody);
                     // 判断第一个接口是否不能处理
-                    if (rerouteHandler.isReroute(sResponseBody)) {
+                    if (rerouteHandler.isReroute(sRequestBody, sResponseBody)) {
                         log.debug("调用第一个接口不能处理，准备调用第二个接口");
                         proxyResponse.setStatusCode(302);
                         return Future.succeededFuture();
