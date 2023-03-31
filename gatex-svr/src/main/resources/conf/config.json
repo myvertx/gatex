@@ -179,6 +179,9 @@
             "isLogging": true,
             "isResponseTime": true,
             "isCors": true,
+            "http2https": {
+                "port": 8091
+            },
             "server": {
                 "port": 8090,
                 "logActivity": true,

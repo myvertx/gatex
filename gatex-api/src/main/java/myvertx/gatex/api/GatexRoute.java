@@ -80,6 +80,10 @@ public class GatexRoute {
          */
         private Boolean             isReverseProxy    = false;
         /**
+         * 是否SSL加密
+         */
+        private Boolean             isSsl             = false;
+        /**
          * 客户端的配置选项
          * httpClientOptions
          */

@@ -6,7 +6,7 @@
     <parent>
         <artifactId>gatex</artifactId>
         <groupId>myvertx.gatex</groupId>
-        <version>1.0.18</version>
+        <version>1.0.19</version>
     </parent>
 
     <artifactId>gatex-util</artifactId>
