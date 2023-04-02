@@ -4,3 +4,4 @@ myvertx.gatex.plugin.PathReplaceProxyInterceptorFactory
 myvertx.gatex.plugin.HtmlPathPrefixProxyInterceptorFactory
 myvertx.gatex.plugin.HtmlBaseProxyInterceptorFactory
 myvertx.gatex.plugin.HtmlReplaceProxyInterceptorFactory
+myvertx.gatex.plugin.RedirectProxyInterceptorFactory
