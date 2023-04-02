@@ -181,19 +181,13 @@ public class WebVerticle extends AbstractWebVerticle {
         final HttpClient httpClient = this.vertx.createHttpClient(httpClientOptions);
 
         HttpProxyEx httpProxy = HttpProxyEx.reverseProxy(httpClient);
-        if (!dst.getIsReverseProxy()) {
+        if (dst.getProxyRequestOptions() == null) {
             httpProxy.origin(dst.getPort(), dst.getHost());
         } else {
-            // 反向代理要往headers中加入Host为目的地的地址，以此覆盖原来最初请求填写的Host
-            httpProxy.originRequestProvider((req, client) -> client.request(new RequestOptions()
-                .setServer(SocketAddress.inetSocketAddress(dst.getPort(), dst.getHost()))
-//                .setHost(dst.getHost())
-//                .setPort(dst.getPort())
-                .putHeader("Host", dst.getHost() + ":" + dst.getPort())
-                // 在headers中加入了Host后，Content-Length的值就对不上了，将其删除并加上chunked无视它
-//                .removeHeader("Content-Length")
-//                .putHeader("Transfer-Encoding", "chunked")
-            ));
+            RequestOptions requestOptions = new RequestOptions(JsonObject.mapFrom(dst.getProxyRequestOptions()));
+            if (requestOptions.getServer() == null)
+                requestOptions.setServer(SocketAddress.inetSocketAddress(dst.getPort(), dst.getHost()));
+            httpProxy.originRequestProvider((req, client) -> client.request(requestOptions));
         }
 
         log.info("给HTTP代理添加代理拦截器");

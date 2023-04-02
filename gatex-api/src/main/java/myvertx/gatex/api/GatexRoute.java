@@ -76,13 +76,13 @@ public class GatexRoute {
          */
         private String              historyMode       = "Html5";
         /**
-         * 是否反向代理
-         */
-        private Boolean             isReverseProxy    = false;
-        /**
          * 是否SSL加密
          */
         private Boolean             isSsl             = false;
+        /**
+         * 代理请求的选项
+         */
+        private Map<String, Object> proxyRequestOptions;
         /**
          * 客户端的配置选项
          * httpClientOptions
