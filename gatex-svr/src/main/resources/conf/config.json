@@ -11,13 +11,13 @@
                     "client": {
                         "logActivity": true
                     },
-                    "proxyInterceptors": {
-                        "pathPrefixReplace": "/ttyd"
-                    },
-                    "proxyRequestOptions": {
+                    "request": {
                         "headers": {
                             "Host": "127.0.0.1:7681"
                         }
+                    },
+                    "proxyInterceptors": {
+                        "pathPrefixReplace": "/ttyd"
                     }
                 }
             },

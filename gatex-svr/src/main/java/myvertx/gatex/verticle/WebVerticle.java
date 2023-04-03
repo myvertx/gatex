@@ -181,10 +181,10 @@ public class WebVerticle extends AbstractWebVerticle {
         final HttpClient httpClient = this.vertx.createHttpClient(httpClientOptions);
 
         HttpProxyEx httpProxy = HttpProxyEx.reverseProxy(httpClient);
-        if (dst.getProxyRequestOptions() == null) {
+        if (dst.getRequest() == null) {
             httpProxy.origin(dst.getPort(), dst.getHost());
         } else {
-            RequestOptions requestOptions = new RequestOptions(JsonObject.mapFrom(dst.getProxyRequestOptions()));
+            RequestOptions requestOptions = new RequestOptions(JsonObject.mapFrom(dst.getRequest()));
             if (requestOptions.getServer() == null)
                 requestOptions.setServer(SocketAddress.inetSocketAddress(dst.getPort(), dst.getHost()));
             httpProxy.originRequestProvider((req, client) -> client.request(requestOptions));
