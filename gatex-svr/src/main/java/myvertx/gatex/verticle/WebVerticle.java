@@ -180,15 +180,15 @@ public class WebVerticle extends AbstractWebVerticle {
         // 创建httpClient
         final HttpClient httpClient = this.vertx.createHttpClient(httpClientOptions);
 
-        HttpProxyEx httpProxy = HttpProxyEx.reverseProxy(httpClient);
+        HttpProxyEx    httpProxy = HttpProxyEx.reverseProxy(httpClient);
+        RequestOptions requestOptions;
         if (dst.getRequest() == null) {
-            httpProxy.origin(dst.getPort(), dst.getHost());
+            requestOptions = new RequestOptions();
         } else {
-            RequestOptions requestOptions = new RequestOptions(JsonObject.mapFrom(dst.getRequest()));
-            if (requestOptions.getServer() == null)
-                requestOptions.setServer(SocketAddress.inetSocketAddress(dst.getPort(), dst.getHost()));
-            httpProxy.originRequestProvider((req, client) -> client.request(requestOptions));
+            requestOptions = new RequestOptions(JsonObject.mapFrom(dst.getRequest()));
         }
+        if (requestOptions.getServer() == null)
+            requestOptions.setServer(SocketAddress.inetSocketAddress(dst.getPort(), dst.getHost()));
 
         log.info("给HTTP代理添加代理拦截器");
         if (StringUtils.isNotBlank(dst.getPath())) {
@@ -203,6 +203,9 @@ public class WebVerticle extends AbstractWebVerticle {
         addProxyInterceptors(httpProxy, dst.getProxyInterceptors());
         log.info("创建代理处理器");
         final ProxyHandler proxyHandler = new ProxyHandlerImplEx(httpProxy);
+
+        log.debug("设置httpProxy的请求处理器");
+        httpProxy.originRequestProvider((req, client) -> client.request(requestOptions));
 
         log.info("遍历当前循环的路由列表中的每一个路由，并添加代理处理器");
         routes.forEach(route -> {

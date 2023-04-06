@@ -80,11 +80,11 @@ public class GatexRoute {
          */
         private Boolean             isSsl             = false;
         /**
-         * 代理发请求的选项
+         * 代理发出请求的选项
          */
         private Map<String, Object> request;
         /**
-         * 客户端的配置选项
+         * 创建客户端的配置选项
          * httpClientOptions
          */
         private Map<String, Object> client;
