@@ -1,19 +1,19 @@
 package myvertx.gatex.plugin;
 
-import java.util.List;
-
 import io.vertx.core.Vertx;
 import lombok.extern.slf4j.Slf4j;
 import myvertx.gatex.api.GatexPredicater;
 import myvertx.gatex.api.GatexPredicaterFactory;
 
+import java.util.List;
+
 /**
  * 排除路径的断言器工厂
  *
  * @author zbz
- *
  */
 @Slf4j
+@Deprecated
 public class PathExcludePredicaterFactory implements GatexPredicaterFactory {
 
     @Override
@@ -27,8 +27,7 @@ public class PathExcludePredicaterFactory implements GatexPredicaterFactory {
             throw new IllegalArgumentException("并未配置pathExclude的值");
         }
 
-        @SuppressWarnings("unchecked")
-        final List<String> regexPaths = (List<String>) options;
+        @SuppressWarnings("unchecked") final List<String> regexPaths = (List<String>) options;
 
         return ctx -> {
             final String uri = ctx.request().uri();
