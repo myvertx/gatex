@@ -36,13 +36,19 @@ public class RedirectProxyInterceptorFactory implements GatexProxyInterceptorFac
         String                    locationConfig              = redirectConfig.get("location");
         String                    locationPrefixConfig        = redirectConfig.get("locationPrefix");
         String                    locationPrefixReplaceConfig = redirectConfig.get("locationPrefixReplace");
-        if (StringUtils.isAnyBlank(locationConfig, locationPrefixConfig, locationPrefixReplaceConfig)) {
+        if (StringUtils.isAllBlank(locationConfig, locationPrefixConfig, locationPrefixReplaceConfig)) {
             throw new IllegalArgumentException("请配置location/locationPrefix/locationPrefixReplace其中任意一个的值");
         }
-        Iterator<String> detailIterator           = Splitter.on(':').trimResults().split(locationPrefixReplaceConfig).iterator();
-        String           locationPrefixReplaceSrc = detailIterator.next();
-        String           locationPrefixReplaceDst = detailIterator.hasNext() ? detailIterator.next() : "";
 
+        String locationPrefixReplaceSrcTemp = null;
+        String locationPrefixReplaceDstTemp = null;
+        if (StringUtils.isNotBlank(locationPrefixReplaceConfig)) {
+            Iterator<String> detailIterator = Splitter.on(':').trimResults().split(locationPrefixReplaceConfig).iterator();
+            locationPrefixReplaceSrcTemp = detailIterator.next();
+            locationPrefixReplaceDstTemp = detailIterator.hasNext() ? detailIterator.next() : "";
+        }
+        String locationPrefixReplaceSrc = locationPrefixReplaceSrcTemp;
+        String locationPrefixReplaceDst = locationPrefixReplaceDstTemp;
 
         return new ProxyInterceptorEx() {
             @Override
@@ -54,6 +60,7 @@ public class RedirectProxyInterceptorFactory implements GatexProxyInterceptorFac
                 log.debug("state code: {}; content-type: {}", statusCode, contentType);
                 if (statusCode == 301 || statusCode == 302) {
                     String location = proxyResponse.headers().get(HttpHeaders.LOCATION);
+                    log.debug("origin location: {}", location);
                     if (StringUtils.isNotBlank(locationConfig)) {
                         location = locationConfig;
                     } else if (StringUtils.isNotBlank(locationPrefixConfig)) {
@@ -61,6 +68,7 @@ public class RedirectProxyInterceptorFactory implements GatexProxyInterceptorFac
                     } else if (StringUtils.isNotBlank(locationPrefixReplaceConfig)) {
                         location = location.replaceFirst("^" + locationPrefixReplaceSrc, locationPrefixReplaceDst);
                     }
+                    log.debug("modified location: {}", location);
                     proxyResponse.headers().set(HttpHeaders.LOCATION, location);
                     return proxyContext.sendResponse();
                 }

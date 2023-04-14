@@ -17,7 +17,10 @@
                         }
                     },
                     "proxyInterceptors": {
-                        "pathPrefixReplace": "/ttyd"
+                        "pathPrefixReplace": "/ttyd",
+                        "redirect": {
+                            "locationPrefix": "/ttyd"
+                        }
                     }
                 }
             },
