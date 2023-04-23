@@ -18,6 +18,10 @@
         </dependency>
         <dependency>
             <groupId>com.github.rebue.wheel</groupId>
+            <artifactId>wheel-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.github.rebue.wheel</groupId>
             <artifactId>wheel-vertx</artifactId>
         </dependency>
 
