@@ -4,6 +4,7 @@ import com.google.inject.Injector;
 import io.vertx.core.Future;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.impl.Arguments;
+import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.httpproxy.Body;
 import io.vertx.httpproxy.ProxyContext;
@@ -11,6 +12,7 @@ import io.vertx.httpproxy.ProxyRequest;
 import io.vertx.httpproxy.ProxyResponse;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import myvertx.gatex.drools.fact.RequestFact;
 import myvertx.gatex.handler.ParsedBodyHandler;
 import myvertx.gatex.handler.RerouteHandler;
 import org.apache.commons.lang3.StringUtils;
@@ -18,6 +20,9 @@ import org.apache.pulsar.client.api.Producer;
 import org.apache.pulsar.client.api.PulsarClient;
 import org.apache.pulsar.client.api.PulsarClientException;
 import org.apache.pulsar.client.api.Schema;
+import org.kie.api.KieServices;
+import org.kie.api.runtime.KieContainer;
+import org.kie.api.runtime.KieSession;
 import rebue.wheel.vertx.httpproxy.ProxyInterceptorEx;
 import rebue.wheel.vertx.httpproxy.impl.BufferingWriteStream;
 
@@ -184,12 +189,30 @@ public class ProxyInterceptorUtils {
         String sTopic = (String) topicObject;
         Arguments.require(StringUtils.isNotBlank(sTopic), interceptorName + ".topic的值不能为空");
 
+        KieServices  kieServices  = KieServices.Factory.get();
+        KieContainer kieContainer = kieServices.getKieClasspathContainer();
+
         final PulsarClient pulsarClient = injector.getInstance(PulsarClient.class);
         Producer<String>   producer     = pulsarClient.newProducer(Schema.STRING).topic(sTopic).create();
         return ProxyInterceptorUtils.createProxyInterceptorA(interceptorName, options, (proxyContext, sRequestBody) -> {
             try {
                 String uri = proxyContext.request().getURI();
-                log.debug("{}准备发送消息: {} {}", interceptorName, uri, sRequestBody);
+                log.debug("{}接收到请求: {} {}", interceptorName, uri, sRequestBody);
+
+                KieSession kieSession = kieContainer.newKieSession(interceptorName);
+                RequestFact fact = RequestFact.builder()
+                        .uri(uri)
+                        .body(new JsonObject(sRequestBody))
+                        .build();
+                kieSession.insert(fact);
+                int firedRulesCount = kieSession.fireAllRules();
+                if (firedRulesCount == 1) {
+                    log.debug("触发了改变body的规则");
+                    sRequestBody = fact.getBody().encode();
+                }
+                kieSession.dispose();
+
+                log.debug("{}准备发送消息到{}: {}", interceptorName, sTopic, sRequestBody);
                 producer.send(uri + " " + sRequestBody);
             } catch (final PulsarClientException e) {
                 log.error(interceptorName + "发送消息出现异常", e);
