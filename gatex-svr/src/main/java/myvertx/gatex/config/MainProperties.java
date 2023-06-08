@@ -1,9 +1,9 @@
 package myvertx.gatex.config;
 
-import java.util.List;
-
 import lombok.Data;
 import myvertx.gatex.api.GatexRoute;
+
+import java.util.List;
 
 @Data
 public class MainProperties {

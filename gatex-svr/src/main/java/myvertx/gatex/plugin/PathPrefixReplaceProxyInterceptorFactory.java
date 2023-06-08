@@ -43,7 +43,7 @@ public class PathPrefixReplaceProxyInterceptorFactory implements GatexProxyInter
             @Override
             public void modifyProxyRequest(ProxyRequest proxyRequest) {
                 log.debug("pathPrefixReplace.modifyProxyRequest 替换请求链接的前缀: {}", pathPrefixReplace);
-                final String       uri     = proxyRequest.getURI().replaceFirst("^" + src, dst);
+                final String uri = proxyRequest.getURI().replaceFirst("^" + src, dst);
                 proxyRequest.setURI(uri);
                 log.debug("请求地址: {}", uri);
             }

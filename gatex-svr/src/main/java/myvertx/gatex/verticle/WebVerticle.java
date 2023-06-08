@@ -11,6 +11,7 @@ import io.vertx.ext.web.Route;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.handler.StaticHandler;
 import io.vertx.ext.web.proxy.handler.ProxyHandler;
+import jakarta.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 import myvertx.gatex.api.*;
 import myvertx.gatex.api.GatexRoute.Dst;
@@ -21,7 +22,6 @@ import rebue.wheel.vertx.httpproxy.ProxyInterceptorEx;
 import rebue.wheel.vertx.verticle.AbstractWebVerticle;
 import rebue.wheel.vertx.web.proxy.handler.impl.ProxyHandlerImplEx;
 
-import javax.inject.Inject;
 import java.util.*;
 
 @Slf4j

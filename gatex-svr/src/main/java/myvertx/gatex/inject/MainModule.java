@@ -1,12 +1,10 @@
 package myvertx.gatex.inject;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
-
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
-
 import io.vertx.core.json.JsonObject;
+import jakarta.inject.Named;
+import jakarta.inject.Singleton;
 import myvertx.gatex.config.MainProperties;
 
 public class MainModule extends AbstractModule {
