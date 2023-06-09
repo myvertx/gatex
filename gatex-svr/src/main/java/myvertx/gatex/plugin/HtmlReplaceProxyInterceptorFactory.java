@@ -58,7 +58,8 @@ public class HtmlReplaceProxyInterceptorFactory implements GatexProxyInterceptor
                 final int           statusCode    = proxyResponse.getStatusCode();
                 final String        contentType   = proxyResponse.headers().get(HttpHeaders.CONTENT_TYPE);
                 log.debug("state code: {}; content-type: {}", statusCode, contentType);
-                if (statusCode == 200 && StringUtils.isNotBlank(contentType) && contentType.contains("text/html")) {
+                if (statusCode == 200 && StringUtils.isNotBlank(contentType)
+                    && (contentType.contains("text/html") || contentType.contains("application/javascript"))) {
                     final Body                 body   = proxyResponse.getBody();
                     final BufferingWriteStream buffer = new BufferingWriteStream();
                     return body.stream().pipeTo(buffer).compose(v -> {
@@ -81,6 +82,7 @@ public class HtmlReplaceProxyInterceptorFactory implements GatexProxyInterceptor
                         replace = entry;
                         break;
                     }
+                    assert replace != null;
                     String location = proxyResponse.headers().get(HttpHeaders.LOCATION).replaceAll(replace.getKey(), replace.getValue());
                     proxyResponse.headers().set(HttpHeaders.LOCATION, location);
                     return proxyContext.sendResponse();
