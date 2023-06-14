@@ -1,22 +1,24 @@
 package myvertx.gatex.plugin;
 
-import com.google.common.base.Splitter;
 import com.google.inject.Injector;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpHeaders;
+import io.vertx.core.impl.Arguments;
 import io.vertx.httpproxy.Body;
 import io.vertx.httpproxy.ProxyContext;
+import io.vertx.httpproxy.ProxyInterceptor;
 import io.vertx.httpproxy.ProxyResponse;
+import io.vertx.httpproxy.impl.BufferingWriteStream;
 import lombok.extern.slf4j.Slf4j;
 import myvertx.gatex.api.GatexProxyInterceptorFactory;
+import myvertx.gatex.mo.SrcPathMo;
+import myvertx.gatex.util.ConfigUtils;
 import org.apache.commons.lang3.StringUtils;
-import rebue.wheel.vertx.httpproxy.ProxyInterceptorEx;
-import rebue.wheel.vertx.httpproxy.impl.BufferingWriteStream;
 
-import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -28,67 +30,86 @@ import java.util.Map;
  */
 @Slf4j
 public class HtmlReplaceProxyInterceptorFactory implements GatexProxyInterceptorFactory {
+    private final static String name = "htmlReplace";
+
     @Override
     public String name() {
-        return "htmlReplace";
+        return name;
     }
 
     @SuppressWarnings("unchecked")
     @Override
-    public ProxyInterceptorEx create(Vertx vertx, final Object options, Injector injector) {
-        if (options == null) {
-            throw new IllegalArgumentException("并未配置htmlReplace的值");
-        }
-        if (!(options instanceof final List<?> replaceOptions)) {
-            throw new RuntimeException("配置错误: main.routes[].dst.proxyInterceptors[].htmlReplace属性必须是String[]类型");
-        }
-        Map<String, String> replaces = new LinkedHashMap<>();
-        for (final String option : (List<String>) replaceOptions) {
-            Iterator<String> detailIterator = Splitter.on(':').trimResults().split(option).iterator();
-            String           src            = detailIterator.next();
-            String           dst            = detailIterator.hasNext() ? detailIterator.next() : "";
-            replaces.put(src, dst);
+    public ProxyInterceptor create(Vertx vertx, final Object options, Injector injector) {
+        Arguments.require(options != null, "并未配置%s的值".formatted(name));
+        Map<String, String> replacements = new LinkedHashMap<>();
+        // 匹配请求URI列表
+        List<SrcPathMo> srcPaths = new LinkedList<>();
+        if (options instanceof List<?> optionsList) {
+            // 读取replacement
+            replacements.putAll(ConfigUtils.readReplacement(name, (List<String>) optionsList));
+        } else if (options instanceof Map<?, ?> optionsMap) {
+            // 读取srcPath
+            srcPaths.addAll(ConfigUtils.readSrcPath(name, optionsMap));
+            // 读取replacement
+            Object replacementListObj = optionsMap.get("replacement");
+            if (replacementListObj instanceof List<?> replacementList) {
+                replacements.putAll(ConfigUtils.readReplacement(name, (List<String>) replacementList));
+            } else {
+                throw new IllegalArgumentException("配置%s的replacement格式错误".formatted(name));
+            }
+        } else {
+            throw new IllegalArgumentException("配置%s的格式错误".formatted(name));
         }
 
-        return new ProxyInterceptorEx() {
+        return new ProxyInterceptor() {
             @Override
             public Future<Void> handleProxyResponse(final ProxyContext proxyContext) {
-                log.debug("htmlReplace.handleProxyResponse: {}", proxyContext);
+                log.debug("{}.handleProxyResponse: {}", name, proxyContext);
                 final ProxyResponse proxyResponse = proxyContext.response();
                 final int           statusCode    = proxyResponse.getStatusCode();
                 final String        contentType   = proxyResponse.headers().get(HttpHeaders.CONTENT_TYPE);
                 log.debug("state code: {}; content-type: {}", statusCode, contentType);
                 if (statusCode == 200 && StringUtils.isNotBlank(contentType)
                     && (contentType.contains("text/html") || contentType.contains("application/javascript"))) {
-                    final Body                 body   = proxyResponse.getBody();
-                    final BufferingWriteStream buffer = new BufferingWriteStream();
-                    return body.stream().pipeTo(buffer).compose(v -> {
-                        String content = buffer.content().toString();
-                        for (Map.Entry<String, String> replace : replaces.entrySet()) {
-                            content = content.replaceAll(replace.getKey(), replace.getValue());
+                    boolean isMatch = false;
+                    if (srcPaths.isEmpty()) {
+                        isMatch = true;
+                    } else {
+                        String method = proxyContext.request().getMethod().name();
+                        String uri    = proxyContext.request().getURI();
+                        for (SrcPathMo srcPath : srcPaths) {
+                            if (StringUtils.isNotBlank(srcPath.getMethod()) && !srcPath.getMethod().equalsIgnoreCase(method)) {
+                                continue;
+                            }
+                            if (uri.matches(srcPath.getRegexPath())) {
+                                isMatch = true;
+                                break;
+                            }
                         }
-
-                        // 重新设置body
-                        proxyResponse.setBody(Body.body(Buffer.buffer(content)));
-                        return proxyContext.sendResponse();
-                    }).recover(err -> {
-                        final String msg = "解析响应的body失败";
-                        log.error(msg, err);
-                        return proxyContext.sendResponse();
-                    });
-                } else if (statusCode == 301 || statusCode == 302) {
-                    Map.Entry<String, String> replace = null;
-                    for (Map.Entry<String, String> entry : replaces.entrySet()) {
-                        replace = entry;
-                        break;
                     }
-                    assert replace != null;
-                    String location = proxyResponse.headers().get(HttpHeaders.LOCATION).replaceAll(replace.getKey(), replace.getValue());
-                    proxyResponse.headers().set(HttpHeaders.LOCATION, location);
-                    return proxyContext.sendResponse();
+
+                    if (isMatch) {
+                        final Body                 body   = proxyResponse.getBody();
+                        final BufferingWriteStream buffer = new BufferingWriteStream();
+                        return body.stream().pipeTo(buffer).compose(v -> {
+                            String content = buffer.content().toString();
+                            for (Map.Entry<String, String> replacement : replacements.entrySet()) {
+                                content = content.replaceAll(replacement.getKey(), replacement.getValue());
+                            }
+
+                            // 重新设置body
+                            proxyResponse.setBody(Body.body(Buffer.buffer(content)));
+                            return proxyContext.sendResponse();
+                        }).recover(err -> {
+                            final String msg = "解析响应的body失败";
+                            log.error(msg, err);
+                            return proxyContext.sendResponse();
+                        });
+                    }
                 }
                 return proxyContext.sendResponse();
             }
         };
     }
+
 }

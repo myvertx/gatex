@@ -12,6 +12,10 @@ import lombok.NoArgsConstructor;
 @Builder
 public class RequestFact {
     /**
+     * 请求的方法
+     */
+    private String     method;
+    /**
      * 请求的URI
      */
     private String     uri;

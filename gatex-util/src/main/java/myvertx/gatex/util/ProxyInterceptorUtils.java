@@ -5,11 +5,9 @@ import io.vertx.core.Future;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.impl.Arguments;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.web.RoutingContext;
-import io.vertx.httpproxy.Body;
-import io.vertx.httpproxy.ProxyContext;
-import io.vertx.httpproxy.ProxyRequest;
-import io.vertx.httpproxy.ProxyResponse;
+import io.vertx.ext.web.client.WebClient;
+import io.vertx.httpproxy.*;
+import io.vertx.httpproxy.impl.BufferingWriteStream;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import myvertx.gatex.drools.fact.RequestFact;
@@ -20,11 +18,8 @@ import org.apache.pulsar.client.api.Producer;
 import org.apache.pulsar.client.api.PulsarClient;
 import org.apache.pulsar.client.api.PulsarClientException;
 import org.apache.pulsar.client.api.Schema;
-import org.kie.api.KieServices;
-import org.kie.api.runtime.KieContainer;
 import org.kie.api.runtime.KieSession;
-import rebue.wheel.vertx.httpproxy.ProxyInterceptorEx;
-import rebue.wheel.vertx.httpproxy.impl.BufferingWriteStream;
+import rebue.wheel.core.DroolsUtils;
 
 import java.util.Map;
 
@@ -64,12 +59,13 @@ public class ProxyInterceptorUtils {
         });
     }
 
-    public static ProxyInterceptorEx createProxyInterceptorA(final String interceptorName, final Object options, ParsedBodyHandler parsedBodyHandler) {
+    public static ProxyInterceptor createProxyInterceptorA(final String interceptorName, final Object options, ParsedBodyHandler parsedBodyHandler) {
         log.info("createProxyInterceptorA {}: {}", interceptorName, options);
-        return new ProxyInterceptorEx() {
+        return new ProxyInterceptor() {
             @Override
             public Future<ProxyResponse> handleProxyRequest(ProxyContext proxyContext) {
-                return ProxyInterceptorUtils.handleRequest(proxyContext, parsedBodyHandler);
+                log.debug("{}.handleProxyRequest", interceptorName);
+                return handleRequest(proxyContext, parsedBodyHandler);
             }
         };
     }
@@ -83,7 +79,7 @@ public class ProxyInterceptorUtils {
      * @param rerouteHandler  重新路由处理器
      * @return 拦截器
      */
-    public static ProxyInterceptorEx createProxyInterceptorB(final String interceptorName, final Object options, RerouteHandler rerouteHandler) {
+    public static ProxyInterceptor createProxyInterceptorB(final String interceptorName, final Object options, Injector injector, RerouteHandler rerouteHandler) {
         log.info("createProxyInterceptorB {}: {}", interceptorName, options);
 
         Arguments.require(options != null, "并未配置" + interceptorName + "的值");
@@ -93,7 +89,8 @@ public class ProxyInterceptorUtils {
         final Object                                             rerouteObject = optionsMap.get("reroute");
         Arguments.require(rerouteObject != null, "并未配置" + interceptorName + ".reroute的值");
 
-        return new ProxyInterceptorEx() {
+        final WebClient webClient = injector.getInstance(WebClient.class);
+        return new ProxyInterceptor() {
             @Override
             public Future<ProxyResponse> handleProxyRequest(final ProxyContext proxyContext) {
                 log.debug("{}.handleProxyRequest", interceptorName);
@@ -106,6 +103,7 @@ public class ProxyInterceptorUtils {
             @Override
             public Future<Void> handleProxyResponse(final ProxyContext proxyContext) {
                 log.debug("{}.handleProxyResponse", interceptorName);
+                ProxyRequest        proxyRequest  = proxyContext.request();
                 final ProxyResponse proxyResponse = proxyContext.response();
                 final int           statusCode    = proxyResponse.getStatusCode();
                 log.debug("state code: {}", statusCode);
@@ -115,57 +113,78 @@ public class ProxyInterceptorUtils {
                 final Body                 body   = proxyResponse.getBody();
                 final BufferingWriteStream buffer = new BufferingWriteStream();
                 log.debug("准备读取响应的body");
-                return body.stream().pipeTo(buffer).compose(v -> {
-                    String sRequestBody = proxyContext.get("originRequestBody", String.class);
-                    log.debug("request body: {}", sRequestBody);
-                    final String sResponseBody = buffer.content().toString();
-                    log.debug("response body: {}", sResponseBody);
-                    // 判断第一个接口是否不能处理
-                    if (rerouteHandler.isReroute(sRequestBody, sResponseBody)) {
-                        log.debug("调用第一个接口不能处理，准备调用第二个接口");
-                        proxyResponse.setStatusCode(302);
-                        return Future.succeededFuture();
-                    }
+                return body.stream().pipeTo(buffer)
+                        .compose(v -> {
+                            // 读取缓存中请求的原始body
+                            String sRequestBody = proxyContext.get("originRequestBody", String.class);
+                            log.debug("request body: {}", sRequestBody);
+                            final String sResponseBody = buffer.content().toString();
+                            log.debug("response body: {}", sResponseBody);
+                            // 判断第一个接口是否不能处理
+                            if (rerouteHandler.isReroute(sRequestBody, sResponseBody)) {
+                                log.debug("调用第一个接口结果不能返回，需要转向调用第二个接口");
+                                return rerouteHandler.getRerouteRequestBody(sRequestBody)
+                                        .compose(sRerouteRequestBody -> {
+                                            log.debug("ctx.reroute: {}, {}", rerouteHandler.getReroutePath(), sRerouteRequestBody);
+                                            return webClient.request(proxyRequest.getMethod(), 0, "host", rerouteHandler.getReroutePath())
+                                                    .sendBuffer(Buffer.buffer(sRerouteRequestBody))
+                                                    .compose(bufferHttpResponse -> {
+                                                        // 重新设置body
+                                                        proxyResponse.setBody(Body.body(bufferHttpResponse.body()));
+                                                        return proxyContext.sendResponse();
+                                                    }).recover(err -> {
+                                                        final String msg = "转向调用第二个接口失败";
+                                                        log.error(msg, err);
+                                                        proxyResponse.setStatusCode(500);
+                                                        return proxyContext.sendResponse();
+                                                    });
+                                        }).recover(err -> {
+                                            final String msg = "获取重新路由的请求body失败";
+                                            log.error(msg, err);
+                                            proxyResponse.setStatusCode(500);
+                                            return proxyContext.sendResponse();
+                                        });
+                            }
 
-                    // 重新设置body
-                    proxyResponse.setBody(Body.body(Buffer.buffer(sResponseBody)));
-
-                    // 继续拦截器
-                    return proxyContext.sendResponse();
-                }).recover(err -> {
-                    final String msg = "解析响应的body失败";
-                    log.error(msg, err);
-                    return proxyContext.sendResponse();
-                });
+                            // 重新设置body
+                            proxyResponse.setBody(Body.body(Buffer.buffer(sResponseBody)));
+                            // 继续拦截器
+                            return proxyContext.sendResponse();
+                        }).recover(err -> {
+                            final String msg = "解析响应的body失败";
+                            log.error(msg, err);
+                            proxyResponse.setStatusCode(500);
+                            return Future.succeededFuture();
+                        });
             }
 
-            @SneakyThrows
-            @Override
-            public boolean beforeResponse(final RoutingContext routingContext, final ProxyContext proxyContext) {
-                log.debug("{}.beforeResponse", interceptorName);
-                ProxyResponse response   = proxyContext.response();
-                final int     statusCode = response.getStatusCode();
-                log.debug("state code: {}", statusCode);
-                if (statusCode != 302) {
-                    routingContext.next();
-                    return true;
-                }
-
-                // 读取缓存中请求的原始body
-                final String originRequestBody = proxyContext.get("originRequestBody", String.class);
-                log.debug("originRequestBody: {}", originRequestBody);
-                rerouteHandler.getRerouteRequestBody(originRequestBody).onSuccess(sOriginRequestBody -> {
-                    routingContext.put("body", sOriginRequestBody);
-                    // 如果要改变body，解决content-length不对的问题
-                    if (!originRequestBody.equals(sOriginRequestBody)) {
-                        routingContext.request().headers().set("Transfer-Encoding", "chunked");
-                        routingContext.request().headers().remove("content-length");
-                    }
-                    log.debug("ctx.reroute: {}, {}", rerouteHandler.getReroutePath(), sOriginRequestBody);
-                    routingContext.reroute(rerouteHandler.getReroutePath());
-                }).onFailure(routingContext::fail);
-                return false;
-            }
+//            @SneakyThrows
+//            @Override
+//            public boolean beforeResponse(final RoutingContext routingContext, final ProxyContext proxyContext) {
+//                log.debug("{}.beforeResponse", interceptorName);
+//                ProxyResponse response   = proxyContext.response();
+//                final int     statusCode = response.getStatusCode();
+//                log.debug("state code: {}", statusCode);
+//                if (statusCode != 302) {
+//                    routingContext.next();
+//                    return true;
+//                }
+//
+//                // 读取缓存中请求的原始body
+//                final String originRequestBody = proxyContext.get("originRequestBody", String.class);
+//                log.debug("originRequestBody: {}", originRequestBody);
+//                rerouteHandler.getRerouteRequestBody(originRequestBody).onSuccess(sOriginRequestBody -> {
+//                    routingContext.put("body", sOriginRequestBody);
+//                    // 如果要改变body，解决content-length不对的问题
+//                    if (!originRequestBody.equals(sOriginRequestBody)) {
+//                        routingContext.request().headers().set("Transfer-Encoding", "chunked");
+//                        routingContext.request().headers().remove("content-length");
+//                    }
+//                    log.debug("ctx.reroute: {}, {}", rerouteHandler.getReroutePath(), sOriginRequestBody);
+//                    routingContext.reroute(rerouteHandler.getReroutePath());
+//                }).onFailure(routingContext::fail);
+//                return false;
+//            }
         };
     }
 
@@ -178,7 +197,7 @@ public class ProxyInterceptorUtils {
      * @return 拦截器
      */
     @SneakyThrows
-    public static ProxyInterceptorEx createProxyInterceptorC(final String interceptorName, final Object options, Injector injector) {
+    public static ProxyInterceptor createProxyInterceptorC(final String interceptorName, final Object options, Injector injector) {
         log.info("createProxyInterceptorC {}: {}", interceptorName, options);
         Arguments.require(options != null, "并未配置" + interceptorName + "的值");
         Arguments.require(options instanceof Map, interceptorName + "的值必须为Map类型");
@@ -189,18 +208,19 @@ public class ProxyInterceptorUtils {
         String sTopic = (String) topicObject;
         Arguments.require(StringUtils.isNotBlank(sTopic), interceptorName + ".topic的值不能为空");
 
-        KieServices  kieServices  = KieServices.Factory.get();
-        KieContainer kieContainer = kieServices.getKieClasspathContainer();
-
         final PulsarClient pulsarClient = injector.getInstance(PulsarClient.class);
         Producer<String>   producer     = pulsarClient.newProducer(Schema.STRING).topic(sTopic).create();
         return ProxyInterceptorUtils.createProxyInterceptorA(interceptorName, options, (proxyContext, sRequestBody) -> {
             try {
-                String uri = proxyContext.request().getURI();
+                ProxyRequest proxyRequest = proxyContext.request();
+                String       method       = proxyRequest.getMethod().name();
+                String       uri          = proxyRequest.getURI();
                 log.debug("{}接收到请求: {} {}", interceptorName, uri, sRequestBody);
 
-                KieSession kieSession = kieContainer.newKieSession(interceptorName);
+                KieSession kieSession = DroolsUtils.newKieSession("gatex");
+                kieSession.getAgenda().getAgendaGroup(interceptorName + ".ProxyInterceptorC").setFocus();
                 RequestFact fact = RequestFact.builder()
+                        .method(method)
                         .uri(uri)
                         .body(new JsonObject(sRequestBody))
                         .build();
@@ -208,12 +228,14 @@ public class ProxyInterceptorUtils {
                 int firedRulesCount = kieSession.fireAllRules();
                 if (firedRulesCount == 1) {
                     log.debug("触发了改变body的规则");
+                    method = fact.getMethod();
+                    uri = fact.getUri();
                     sRequestBody = fact.getBody().encode();
                 }
                 kieSession.dispose();
 
                 log.debug("{}准备发送消息到{}: {}", interceptorName, sTopic, sRequestBody);
-                producer.send(uri + " " + sRequestBody);
+                producer.send(method + ":" + uri + " " + sRequestBody);
             } catch (final PulsarClientException e) {
                 log.error(interceptorName + "发送消息出现异常", e);
                 throw new RuntimeException(e);

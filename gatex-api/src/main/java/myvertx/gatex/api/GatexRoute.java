@@ -19,11 +19,6 @@ public class GatexRoute {
     private Dst dst;
 
     /**
-     * 断言列表
-     */
-    private Map<String, Object> predicates;
-
-    /**
      * 来源配置
      * <p>
      * path和regexPath可以同时使用，是or的逻辑
@@ -33,15 +28,11 @@ public class GatexRoute {
         /**
          * 匹配来源的路径(匹配前面部分)
          */
-        private Object              path;
+        private Object path;
         /**
          * 匹配来源的路径(正则表达式)
          */
-        private Object              regexPath;
-        /**
-         * 匹配器列表
-         */
-        private Map<String, Object> matchers;
+        private Object regexPath;
     }
 
     /**
@@ -74,11 +65,11 @@ public class GatexRoute {
         /**
          * 静态网站的HistoryMode(Hash/Html5/Memory)，默认为Html5
          */
-        private String              historyMode       = "Html5";
+        private String              historyMode = "Html5";
         /**
          * 是否SSL加密
          */
-        private Boolean             isSsl             = false;
+        private Boolean             isSsl       = false;
         /**
          * 代理发出请求的选项
          */
@@ -89,17 +80,14 @@ public class GatexRoute {
          */
         private Map<String, Object> client;
         /**
-         * 前置过滤器
+         * 断言列表
          */
-        private Map<String, Object> preFilters;
+        private Map<String, Object> predicates;
         /**
-         * 后置过滤器
+         * 过滤器
          */
-        private Map<String, Object> postFilters;
-        /**
-         * 代理拦截器
-         */
-        private Map<String, Object> proxyInterceptors = new LinkedHashMap<>();
+        private Map<String, Object> filters     = new LinkedHashMap<>();
+
     }
 
 }

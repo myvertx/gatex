@@ -12,17 +12,22 @@
     <artifactId>gatex-svr</artifactId>
 
     <dependencies>
+        <!-- 此包中有与vertx重名重路径的类，所以放在最前-->
+        <dependency>
+            <groupId>com.github.rebue.wheel</groupId>
+            <artifactId>wheel-vertx</artifactId>
+        </dependency>
         <dependency>
             <groupId>myvertx.gatex</groupId>
             <artifactId>gatex-api</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.github.rebue.wheel</groupId>
-            <artifactId>wheel-core</artifactId>
+            <groupId>myvertx.gatex</groupId>
+            <artifactId>gatex-util</artifactId>
         </dependency>
         <dependency>
             <groupId>com.github.rebue.wheel</groupId>
-            <artifactId>wheel-vertx</artifactId>
+            <artifactId>wheel-core</artifactId>
         </dependency>
 
         <dependency>

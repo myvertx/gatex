@@ -5,12 +5,13 @@ import com.google.inject.Injector;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpHeaders;
+import io.vertx.core.impl.Arguments;
 import io.vertx.httpproxy.ProxyContext;
+import io.vertx.httpproxy.ProxyInterceptor;
 import io.vertx.httpproxy.ProxyResponse;
 import lombok.extern.slf4j.Slf4j;
 import myvertx.gatex.api.GatexProxyInterceptorFactory;
 import org.apache.commons.lang3.StringUtils;
-import rebue.wheel.vertx.httpproxy.ProxyInterceptorEx;
 
 import java.util.Iterator;
 import java.util.Map;
@@ -22,16 +23,18 @@ import java.util.Map;
  */
 @Slf4j
 public class RedirectProxyInterceptorFactory implements GatexProxyInterceptorFactory {
+    private final static String name = "redirect";
+
     @Override
     public String name() {
-        return "redirect";
+        return name;
     }
 
     @Override
-    public ProxyInterceptorEx create(Vertx vertx, final Object options, Injector injector) {
-        if (options == null) {
-            throw new IllegalArgumentException("并未配置redirect的值");
-        }
+    public ProxyInterceptor create(Vertx vertx, final Object options, Injector injector) {
+        Arguments.require(options != null, "并未配置%s的值".formatted(name));
+
+        @SuppressWarnings("unchecked")
         final Map<String, String> redirectConfig              = (Map<String, String>) options;
         String                    locationConfig              = redirectConfig.get("location");
         String                    locationPrefixConfig        = redirectConfig.get("locationPrefix");
@@ -43,14 +46,14 @@ public class RedirectProxyInterceptorFactory implements GatexProxyInterceptorFac
         String locationPrefixReplaceSrcTemp = null;
         String locationPrefixReplaceDstTemp = null;
         if (StringUtils.isNotBlank(locationPrefixReplaceConfig)) {
-            Iterator<String> detailIterator = Splitter.on(':').trimResults().split(locationPrefixReplaceConfig).iterator();
+            Iterator<String> detailIterator = Splitter.on(':').trimResults().omitEmptyStrings().split(locationPrefixReplaceConfig).iterator();
             locationPrefixReplaceSrcTemp = detailIterator.next();
             locationPrefixReplaceDstTemp = detailIterator.hasNext() ? detailIterator.next() : "";
         }
         String locationPrefixReplaceSrc = locationPrefixReplaceSrcTemp;
         String locationPrefixReplaceDst = locationPrefixReplaceDstTemp;
 
-        return new ProxyInterceptorEx() {
+        return new ProxyInterceptor() {
             @Override
             public Future<Void> handleProxyResponse(final ProxyContext proxyContext) {
                 log.debug("redirect.handleProxyResponse: {}", proxyContext);
