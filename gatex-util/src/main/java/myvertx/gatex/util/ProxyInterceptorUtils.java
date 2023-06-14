@@ -160,34 +160,6 @@ public class ProxyInterceptorUtils {
                             return Future.succeededFuture();
                         });
             }
-
-//            @SneakyThrows
-//            @Override
-//            public boolean beforeResponse(final RoutingContext routingContext, final ProxyContext proxyContext) {
-//                log.debug("{}.beforeResponse", interceptorName);
-//                ProxyResponse response   = proxyContext.response();
-//                final int     statusCode = response.getStatusCode();
-//                log.debug("state code: {}", statusCode);
-//                if (statusCode != 302) {
-//                    routingContext.next();
-//                    return true;
-//                }
-//
-//                // 读取缓存中请求的原始body
-//                final String originRequestBody = proxyContext.get("originRequestBody", String.class);
-//                log.debug("originRequestBody: {}", originRequestBody);
-//                rerouteHandler.getRerouteRequestBody(originRequestBody).onSuccess(sOriginRequestBody -> {
-//                    routingContext.put("body", sOriginRequestBody);
-//                    // 如果要改变body，解决content-length不对的问题
-//                    if (!originRequestBody.equals(sOriginRequestBody)) {
-//                        routingContext.request().headers().set("Transfer-Encoding", "chunked");
-//                        routingContext.request().headers().remove("content-length");
-//                    }
-//                    log.debug("ctx.reroute: {}, {}", rerouteHandler.getReroutePath(), sOriginRequestBody);
-//                    routingContext.reroute(rerouteHandler.getReroutePath());
-//                }).onFailure(routingContext::fail);
-//                return false;
-//            }
         };
     }
 
@@ -229,16 +201,11 @@ public class ProxyInterceptorUtils {
                         .build();
                 kieSession.insert(fact);
                 int firedRulesCount = kieSession.fireAllRules();
-                if (firedRulesCount == 1) {
-                    log.debug("触发了改变body的规则");
-                    method = fact.getMethod();
-                    uri = fact.getUri();
-                    sRequestBody = fact.getBody().encode();
-                }
+                log.debug("触发执行了改变body的规则数为{}", firedRulesCount);
                 kieSession.dispose();
 
-                log.debug("{}准备发送消息到{}: {}", interceptorName, sTopic, sRequestBody);
-                producer.send(method + ":" + uri + " " + sRequestBody);
+                log.debug("{}准备发送消息到{}: {}", interceptorName, sTopic, fact.getBody());
+                producer.send(fact.getMethod() + ":" + fact.getUri() + " " + fact.getBody());
             } catch (final PulsarClientException e) {
                 log.error(interceptorName + "发送消息出现异常", e);
                 throw new RuntimeException(e);

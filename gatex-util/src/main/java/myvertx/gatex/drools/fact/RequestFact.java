@@ -16,6 +16,14 @@ public class RequestFact {
      */
     private String     method;
     /**
+     * 请求的主机
+     */
+    private String     host;
+    /**
+     * 请求的端口
+     */
+    private Integer    port;
+    /**
      * 请求的URI
      */
     private String     uri;
