@@ -130,7 +130,10 @@ public class ProxyInterceptorUtils {
                                                     .sendBuffer(Buffer.buffer(sRerouteRequestBody))
                                                     .compose(bufferHttpResponse -> {
                                                         // 重新设置body
-                                                        proxyResponse.setBody(Body.body(bufferHttpResponse.body()));
+                                                        proxyResponse
+                                                                .setStatusCode(200)
+                                                                .putHeader("Content-Type", "application/json")
+                                                                .setBody(Body.body(bufferHttpResponse.body()));
                                                         return proxyContext.sendResponse();
                                                     }).recover(err -> {
                                                         final String msg = "转向调用第二个接口失败";
