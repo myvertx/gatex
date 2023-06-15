@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.regex.Pattern;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -13,9 +15,9 @@ public class SrcPathMo {
     /**
      * 请求的方法
      */
-    private String method;
+    private String  method;
     /**
      * 请求路径匹配的正则表达式
      */
-    private String regexPath;
+    private Pattern regexPath;
 }

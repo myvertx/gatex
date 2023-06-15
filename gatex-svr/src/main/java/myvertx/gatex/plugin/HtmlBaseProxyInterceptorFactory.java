@@ -67,39 +67,27 @@ public class HtmlBaseProxyInterceptorFactory implements GatexProxyInterceptorFac
                 final int           statusCode    = proxyResponse.getStatusCode();
                 final String        contentType   = proxyResponse.headers().get(HttpHeaders.CONTENT_TYPE);
                 log.debug("state code: {}; content-type: {}", statusCode, contentType);
-                if (statusCode == 200 && StringUtils.isNotBlank(contentType) && contentType.contains("text/html")) {
-                    boolean isMatch = false;
-                    if (srcPaths.isEmpty()) {
-                        isMatch = true;
-                    } else {
-                        String method = proxyContext.request().getMethod().name();
-                        String uri    = proxyContext.request().getURI();
-                        for (SrcPathMo srcPath : srcPaths) {
-                            if (StringUtils.isNotBlank(srcPath.getMethod()) && !srcPath.getMethod().equalsIgnoreCase(method)) {
-                                continue;
-                            }
-                            if (uri.matches(srcPath.getRegexPath())) {
-                                isMatch = true;
-                                break;
-                            }
+                try {
+                    if (statusCode == 200 && StringUtils.isNotBlank(contentType) && contentType.contains("text/html")) {
+                        if (ConfigUtils.isMatchSrcPath(proxyContext, srcPaths)) {
+                            final Body                 body   = proxyResponse.getBody();
+                            final BufferingWriteStream buffer = new BufferingWriteStream();
+                            return body.stream().pipeTo(buffer).compose(v -> {
+                                String content = buffer.content().toString();
+                                content = content.replaceAll("<head>", "<head><base href=\"" + baseHref + "\">");
+                                // 重新设置body
+                                proxyResponse.setBody(Body.body(Buffer.buffer(content)));
+                                return proxyContext.sendResponse();
+                            }).recover(err -> {
+                                final String msg = "解析响应的body失败";
+                                log.error(msg, err);
+                                return proxyContext.sendResponse();
+                            });
                         }
                     }
-
-                    if (isMatch) {
-                        final Body                 body   = proxyResponse.getBody();
-                        final BufferingWriteStream buffer = new BufferingWriteStream();
-                        return body.stream().pipeTo(buffer).compose(v -> {
-                            String content = buffer.content().toString();
-                            content = content.replaceAll("<head>", "<head><base href=\"" + baseHref + "\">");
-                            // 重新设置body
-                            proxyResponse.setBody(Body.body(Buffer.buffer(content)));
-                            return proxyContext.sendResponse();
-                        }).recover(err -> {
-                            final String msg = "解析响应的body失败";
-                            log.error(msg, err);
-                            return proxyContext.sendResponse();
-                        });
-                    }
+                } catch (Exception e) {
+                    log.error("未知错误", e);
+                    proxyResponse.setStatusCode(500);
                 }
                 return proxyContext.sendResponse();
             }
