@@ -11,6 +11,7 @@ import io.vertx.httpproxy.ProxyInterceptor;
 import io.vertx.httpproxy.ProxyResponse;
 import lombok.extern.slf4j.Slf4j;
 import myvertx.gatex.api.GatexProxyInterceptorFactory;
+import myvertx.gatex.api.GatexRoute;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.Iterator;
@@ -31,7 +32,7 @@ public class RedirectProxyInterceptorFactory implements GatexProxyInterceptorFac
     }
 
     @Override
-    public ProxyInterceptor create(Vertx vertx, final Object options, Injector injector) {
+    public ProxyInterceptor create(Vertx vertx, Injector injector, GatexRoute.Dst dst, Object options) {
         Arguments.require(options != null, "并未配置%s的值".formatted(name));
 
         @SuppressWarnings("unchecked")

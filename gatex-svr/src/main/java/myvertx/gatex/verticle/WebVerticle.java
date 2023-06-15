@@ -176,7 +176,7 @@ public class WebVerticle extends AbstractWebVerticle {
         if (StringUtils.isNotBlank(dst.getPathPrefixReplace())) {
             dst.getFilters().put("pathPrefixReplace", dst.getPathPrefixReplace());
         }
-        addProxyInterceptors(httpProxy, dst.getFilters());
+        addProxyInterceptors(httpProxy, dst);
         log.info("创建代理处理器");
         final ProxyHandler proxyHandler = new ProxyHandlerImpl(httpProxy);
 
@@ -254,10 +254,11 @@ public class WebVerticle extends AbstractWebVerticle {
     /**
      * 添加代理拦截器
      *
-     * @param httpProxy         Http客户端代理
-     * @param proxyInterceptors 代理拦截器列表
+     * @param httpProxy Http客户端代理
+     * @param dst       目的地的配置
      */
-    private void addProxyInterceptors(final HttpProxy httpProxy, final Map<String, Object> proxyInterceptors) {
+    private void addProxyInterceptors(final HttpProxy httpProxy, Dst dst) {
+        final Map<String, Object> proxyInterceptors = dst.getFilters();
         if (proxyInterceptors == null || proxyInterceptors.isEmpty()) {
             return;
         }
@@ -267,7 +268,7 @@ public class WebVerticle extends AbstractWebVerticle {
                 log.debug("添加代理拦截器 {}: {}", key, value);
                 final GatexProxyInterceptorFactory factory = this._proxyInterceptorFactories.get(key);
                 Arguments.require(factory != null, "找不到名为" + key + "的代理拦截器");
-                final ProxyInterceptor proxyInterceptor = factory.create(this.vertx, value, this.injector);
+                final ProxyInterceptor proxyInterceptor = factory.create(this.vertx, this.injector, dst, value);
                 httpProxy.addInterceptor(proxyInterceptor);
             } catch (Exception e) {
                 log.error("添加" + key + "代理拦截器异常", e);

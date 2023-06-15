@@ -7,6 +7,7 @@ import io.vertx.httpproxy.ProxyInterceptor;
 import io.vertx.httpproxy.ProxyRequest;
 import lombok.extern.slf4j.Slf4j;
 import myvertx.gatex.api.GatexProxyInterceptorFactory;
+import myvertx.gatex.api.GatexRoute;
 import org.apache.commons.lang3.StringUtils;
 
 /**
@@ -23,7 +24,7 @@ public class PathPrefixProxyInterceptorFactory implements GatexProxyInterceptorF
     }
 
     @Override
-    public ProxyInterceptor create(Vertx vertx, final Object options, Injector injector) {
+    public ProxyInterceptor create(Vertx vertx, Injector injector, GatexRoute.Dst dst, Object options) {
         Arguments.require(options != null, "并未配置%s的值".formatted(name));
         final String pathPrefix = (String) options;
         Arguments.require(StringUtils.isNotBlank(pathPrefix), "并未配置%s的值".formatted(name));

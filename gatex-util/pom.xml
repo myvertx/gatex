@@ -13,6 +13,10 @@
 
     <dependencies>
         <dependency>
+            <groupId>myvertx.gatex</groupId>
+            <artifactId>gatex-api</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.github.rebue.wheel</groupId>
             <artifactId>wheel-core</artifactId>
         </dependency>

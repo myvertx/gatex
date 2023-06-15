@@ -10,6 +10,7 @@ import io.vertx.httpproxy.*;
 import io.vertx.httpproxy.impl.BufferingWriteStream;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import myvertx.gatex.api.GatexRoute;
 import myvertx.gatex.drools.fact.RequestFact;
 import myvertx.gatex.handler.ParsedBodyHandler;
 import myvertx.gatex.handler.RerouteHandler;
@@ -79,7 +80,7 @@ public class ProxyInterceptorUtils {
      * @param rerouteHandler  重新路由处理器
      * @return 拦截器
      */
-    public static ProxyInterceptor createProxyInterceptorB(final String interceptorName, final Object options, Injector injector, RerouteHandler rerouteHandler) {
+    public static ProxyInterceptor createProxyInterceptorB(String interceptorName, GatexRoute.Dst dst, final Object options, Injector injector, RerouteHandler rerouteHandler) {
         log.info("createProxyInterceptorB {}: {}", interceptorName, options);
 
         Arguments.require(options != null, "并未配置" + interceptorName + "的值");
@@ -126,7 +127,7 @@ public class ProxyInterceptorUtils {
                                 return rerouteHandler.getRerouteRequestBody(sRequestBody)
                                         .compose(sRerouteRequestBody -> {
                                             log.debug("ctx.reroute: {}, {}", rerouteHandler.getReroutePath(), sRerouteRequestBody);
-                                            return webClient.request(proxyRequest.getMethod(), 0, "host", rerouteHandler.getReroutePath())
+                                            return webClient.request(proxyRequest.getMethod(), dst.getPort(), dst.getHost(), rerouteHandler.getReroutePath())
                                                     .sendBuffer(Buffer.buffer(sRerouteRequestBody))
                                                     .compose(bufferHttpResponse -> {
                                                         // 重新设置body

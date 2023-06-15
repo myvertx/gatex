@@ -19,9 +19,12 @@ public interface GatexProxyInterceptorFactory {
     /**
      * 创建拦截器
      *
-     * @param options  创建拦截器的参数
+     * @param vertx    vertx实例
      * @param injector 注入器
+     * @param dst      目的地的配置
+     * @param options  代理拦截器的配置选项
+     * @return 拦截器
      */
-    ProxyInterceptor create(Vertx vertx, Object options, Injector injector);
+    ProxyInterceptor create(Vertx vertx, Injector injector, GatexRoute.Dst dst, Object options);
 
 }

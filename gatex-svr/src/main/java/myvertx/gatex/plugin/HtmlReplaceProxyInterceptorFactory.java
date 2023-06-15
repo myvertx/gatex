@@ -13,6 +13,7 @@ import io.vertx.httpproxy.ProxyResponse;
 import io.vertx.httpproxy.impl.BufferingWriteStream;
 import lombok.extern.slf4j.Slf4j;
 import myvertx.gatex.api.GatexProxyInterceptorFactory;
+import myvertx.gatex.api.GatexRoute;
 import myvertx.gatex.mo.SrcPathMo;
 import myvertx.gatex.util.ConfigUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -39,7 +40,7 @@ public class HtmlReplaceProxyInterceptorFactory implements GatexProxyInterceptor
 
     @SuppressWarnings("unchecked")
     @Override
-    public ProxyInterceptor create(Vertx vertx, final Object options, Injector injector) {
+    public ProxyInterceptor create(Vertx vertx, Injector injector, GatexRoute.Dst dst, Object options) {
         Arguments.require(options != null, "并未配置%s的值".formatted(name));
         Map<String, String> replacements = new LinkedHashMap<>();
         // 匹配请求URI列表
