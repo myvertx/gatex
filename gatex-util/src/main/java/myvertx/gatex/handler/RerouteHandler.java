@@ -1,6 +1,7 @@
 package myvertx.gatex.handler;
 
 import io.vertx.core.Future;
+import myvertx.gatex.drools.fact.RequestFact;
 
 /**
  * 重新路由的处理器
@@ -18,17 +19,13 @@ public interface RerouteHandler {
     boolean isReroute(String sRequestBody, String sResponseBody);
 
     /**
-     * 获取重新路由的请求body
+     * 设置重新路由的请求
      *
-     * @param sOriginRequestBody 原始的请求body(默认重新路由的请求body就是原始路由的请求body)
-     * @return 重新路由的请求body
+     * @param requestFact 要请求的详情
+     * @return 请求的详情
      */
-    default Future<String> getRerouteRequestBody(String sOriginRequestBody) {
-        return Future.succeededFuture(sOriginRequestBody);
+    default Future<RequestFact> setRequestOfReroute(RequestFact requestFact) {
+        return Future.succeededFuture(requestFact);
     }
 
-    /**
-     * 获取重新路由的请求路径
-     */
-    String getReroutePath();
 }

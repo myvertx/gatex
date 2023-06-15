@@ -3,6 +3,7 @@ package myvertx.gatex.util;
 import com.google.inject.Injector;
 import io.vertx.core.Future;
 import io.vertx.core.buffer.Buffer;
+import io.vertx.core.http.HttpMethod;
 import io.vertx.core.impl.Arguments;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.WebClient;
@@ -22,6 +23,7 @@ import org.apache.pulsar.client.api.Schema;
 import org.kie.api.runtime.KieSession;
 import rebue.wheel.core.DroolsUtils;
 
+import java.net.URL;
 import java.util.Map;
 
 @Slf4j
@@ -80,6 +82,7 @@ public class ProxyInterceptorUtils {
      * @param rerouteHandler  重新路由处理器
      * @return 拦截器
      */
+    @SneakyThrows
     public static ProxyInterceptor createProxyInterceptorB(String interceptorName, GatexRoute.Dst dst, final Object options, Injector injector, RerouteHandler rerouteHandler) {
         log.info("createProxyInterceptorB {}: {}", interceptorName, options);
 
@@ -89,6 +92,35 @@ public class ProxyInterceptorUtils {
         @SuppressWarnings("unchecked") final Map<String, Object> optionsMap    = (Map<String, Object>) options;
         final Object                                             rerouteObject = optionsMap.get("reroute");
         Arguments.require(rerouteObject != null, "并未配置" + interceptorName + ".reroute的值");
+        String  rerouteMethodTemp = null;
+        String  rerouteHostTemp;
+        Integer reroutePortTemp;
+        String  rerouteUriTemp;
+        if (rerouteObject instanceof String sReroute) {
+            String sRerouteUpperCase = sReroute.toUpperCase();
+            if (sRerouteUpperCase.startsWith("GET:") || sRerouteUpperCase.startsWith("POST:")
+                    || sRerouteUpperCase.startsWith("PUT:") || sRerouteUpperCase.startsWith("DELETE:")) {
+                int index = sReroute.indexOf(":");
+                rerouteMethodTemp = sReroute.substring(0, index);
+                sReroute = sReroute.substring(index + 1);
+            }
+            URL url = new URL(sReroute);
+            rerouteHostTemp = url.getHost();
+            reroutePortTemp = url.getPort() == -1 ? url.getDefaultPort() : url.getPort();
+            rerouteUriTemp = url.getPath();
+        } else {
+            @SuppressWarnings("unchecked") Map<String, Object> reroute = (Map<String, Object>) rerouteObject;
+            rerouteMethodTemp = (String) reroute.get("method");
+            rerouteHostTemp = (String) reroute.get("host");
+            reroutePortTemp = (Integer) reroute.get("port");
+            rerouteUriTemp = (String) reroute.get("uri");
+            Arguments.require(StringUtils.isNotBlank(rerouteUriTemp), interceptorName + ".reroute.uri的值不能为空");
+        }
+
+        String  rerouteMethod = rerouteMethodTemp;
+        String  rerouteHost   = StringUtils.isNotBlank(rerouteHostTemp) ? rerouteHostTemp : dst.getHost();
+        Integer reroutePort   = reroutePortTemp != null && reroutePortTemp != 0 ? reroutePortTemp : dst.getPort();
+        String  rerouteUri    = rerouteUriTemp;
 
         final WebClient webClient = injector.getInstance(WebClient.class);
         return new ProxyInterceptor() {
@@ -121,14 +153,22 @@ public class ProxyInterceptorUtils {
                             log.debug("request body: {}", sRequestBody);
                             final String sResponseBody = buffer.content().toString();
                             log.debug("response body: {}", sResponseBody);
+
                             // 判断第一个接口是否不能处理
                             if (rerouteHandler.isReroute(sRequestBody, sResponseBody)) {
                                 log.debug("调用第一个接口结果不能返回，需要转向调用第二个接口");
-                                return rerouteHandler.getRerouteRequestBody(sRequestBody)
-                                        .compose(sRerouteRequestBody -> {
-                                            log.debug("ctx.reroute: {}, {}", rerouteHandler.getReroutePath(), sRerouteRequestBody);
-                                            return webClient.request(proxyRequest.getMethod(), dst.getPort(), dst.getHost(), rerouteHandler.getReroutePath())
-                                                    .sendBuffer(Buffer.buffer(sRerouteRequestBody))
+                                RequestFact requestFact = RequestFact.builder()
+                                        .method(StringUtils.isNotBlank(rerouteMethod) ? rerouteMethod : proxyRequest.getMethod().name())
+                                        .host(rerouteHost)
+                                        .port(reroutePort)
+                                        .uri(rerouteUri)
+                                        .body(new JsonObject(sRequestBody))
+                                        .build();
+                                return rerouteHandler.setRequestOfReroute(requestFact)
+                                        .compose(newRequestFact -> {
+                                            log.debug("ctx.reroute: {}", newRequestFact);
+                                            return webClient.request(HttpMethod.valueOf(newRequestFact.getMethod()), newRequestFact.getPort(), newRequestFact.getHost(), newRequestFact.getUri())
+                                                    .sendJsonObject(newRequestFact.getBody())
                                                     .compose(bufferHttpResponse -> {
                                                         // 重新设置body
                                                         proxyResponse
@@ -195,18 +235,18 @@ public class ProxyInterceptorUtils {
 
                 KieSession kieSession = DroolsUtils.newKieSession("gatex");
                 kieSession.getAgenda().getAgendaGroup(interceptorName + ".ProxyInterceptorC").setFocus();
-                RequestFact fact = RequestFact.builder()
+                RequestFact requestFact = RequestFact.builder()
                         .method(method)
                         .uri(uri)
                         .body(new JsonObject(sRequestBody))
                         .build();
-                kieSession.insert(fact);
+                kieSession.insert(requestFact);
                 int firedRulesCount = kieSession.fireAllRules();
                 log.debug("触发执行了改变body的规则数为{}", firedRulesCount);
                 kieSession.dispose();
 
-                log.debug("{}准备发送消息到{}: {}", interceptorName, sTopic, fact.getBody());
-                producer.send(fact.getMethod() + ":" + fact.getUri() + " " + fact.getBody());
+                log.debug("{}准备发送消息到{}: {}", interceptorName, sTopic, requestFact.getBody());
+                producer.send(requestFact.getMethod() + ":" + requestFact.getUri() + " " + requestFact.getBody());
             } catch (final PulsarClientException e) {
                 log.error(interceptorName + "发送消息出现异常", e);
                 throw new RuntimeException(e);
