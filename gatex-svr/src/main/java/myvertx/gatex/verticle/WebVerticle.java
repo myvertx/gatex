@@ -23,10 +23,8 @@ import myvertx.gatex.api.GatexRoute;
 import myvertx.gatex.api.GatexRoute.Dst;
 import myvertx.gatex.config.MainProperties;
 import org.apache.commons.lang3.StringUtils;
-import rebue.wheel.vertx.skywalking.handler.SkyWalkingTraceIdReadHandler;
-import rebue.wheel.vertx.skywalking.proxyinterceptor.SkyWalkingTraceIdReadProxyInterceptor;
-import rebue.wheel.vertx.skywalking.proxyinterceptor.SkyWalkingTraceIdWriteProxyInterceptor;
 import rebue.wheel.vertx.skywalking.SkyWalkingUtils;
+import rebue.wheel.vertx.skywalking.proxyinterceptor.SkyWalkingTraceIdWriteProxyInterceptor;
 import rebue.wheel.vertx.verticle.AbstractWebVerticle;
 
 import java.util.*;
@@ -193,11 +191,11 @@ public class WebVerticle extends AbstractWebVerticle {
             log.info("给路由添加断言处理器");
             addPredicateHandler(route, dst.getPredicates());
             log.info("给路由添加代理处理器");
-            if (SkyWalkingUtils.isEnabled()) {
-                route.handler(new SkyWalkingTraceIdReadHandler(proxyHandler));
-            } else {
-                route.handler(proxyHandler);
-            }
+//            if (SkyWalkingUtils.isEnabled()) {
+//                route.handler(new SkyWalkingTraceIdReadHandler(proxyHandler));
+//            } else {
+            route.handler(proxyHandler);
+//            }
         });
     }
 
@@ -271,18 +269,20 @@ public class WebVerticle extends AbstractWebVerticle {
             return;
         }
 
-        if (SkyWalkingUtils.isEnabled()) {
-            httpProxy.addInterceptor(new SkyWalkingTraceIdWriteProxyInterceptor());
-        }
+//        if (SkyWalkingUtils.isEnabled()) {
+//            log.debug("添加将SkyWalking的traceId写入上下文的代理");
+//            httpProxy.addInterceptor(new SkyWalkingTraceIdWriteProxyInterceptor());
+//        }
+
         proxyInterceptors.forEach((key, value) -> {
             try {
                 log.debug("添加代理拦截器 {}: {}", key, value);
                 final GatexProxyInterceptorFactory factory = this._proxyInterceptorFactories.get(key);
                 Arguments.require(factory != null, "找不到名为" + key + "的代理拦截器");
                 ProxyInterceptor proxyInterceptor = factory.create(this.vertx, this.injector, dst, value);
-                if (SkyWalkingUtils.isEnabled()) {
-                    proxyInterceptor = new SkyWalkingTraceIdReadProxyInterceptor(proxyInterceptor);
-                }
+//                if (SkyWalkingUtils.isEnabled()) {
+//                    proxyInterceptor = new SkyWalkingTraceIdReadProxyInterceptor(proxyInterceptor);
+//                }
                 httpProxy.addInterceptor(proxyInterceptor);
             } catch (Exception e) {
                 log.error("添加" + key + "代理拦截器异常", e);
