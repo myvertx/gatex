@@ -93,8 +93,8 @@ public class ProxyInterceptorUtils {
         final Object                                             rerouteObject = optionsMap.get("reroute");
         Arguments.require(rerouteObject != null, "并未配置" + interceptorName + ".reroute的值");
         String  rerouteMethodTemp = null;
-        String  rerouteHostTemp;
-        Integer reroutePortTemp;
+        String  rerouteHostTemp   = null;
+        Integer reroutePortTemp   = null;
         String  rerouteUriTemp;
         if (rerouteObject instanceof String sReroute) {
             String sRerouteUpperCase = sReroute.toUpperCase();
@@ -104,10 +104,14 @@ public class ProxyInterceptorUtils {
                 rerouteMethodTemp = sReroute.substring(0, index);
                 sReroute = sReroute.substring(index + 1);
             }
-            URL url = new URL(sReroute);
-            rerouteHostTemp = url.getHost();
-            reroutePortTemp = url.getPort() == -1 ? url.getDefaultPort() : url.getPort();
-            rerouteUriTemp = url.getPath();
+            if (sReroute.startsWith("/")) {
+                rerouteUriTemp = sReroute;
+            } else {
+                URL url = new URL(sReroute);
+                rerouteHostTemp = url.getHost();
+                reroutePortTemp = url.getPort() == -1 ? url.getDefaultPort() : url.getPort();
+                rerouteUriTemp = url.getPath();
+            }
         } else {
             @SuppressWarnings("unchecked") Map<String, Object> reroute = (Map<String, Object>) rerouteObject;
             rerouteMethodTemp = (String) reroute.get("method");
