@@ -23,8 +23,6 @@ import myvertx.gatex.api.GatexRoute;
 import myvertx.gatex.api.GatexRoute.Dst;
 import myvertx.gatex.config.MainProperties;
 import org.apache.commons.lang3.StringUtils;
-import rebue.wheel.vertx.skywalking.SkyWalkingUtils;
-import rebue.wheel.vertx.skywalking.proxyinterceptor.SkyWalkingTraceIdWriteProxyInterceptor;
 import rebue.wheel.vertx.verticle.AbstractWebVerticle;
 
 import java.util.*;
@@ -191,11 +189,7 @@ public class WebVerticle extends AbstractWebVerticle {
             log.info("给路由添加断言处理器");
             addPredicateHandler(route, dst.getPredicates());
             log.info("给路由添加代理处理器");
-//            if (SkyWalkingUtils.isEnabled()) {
-//                route.handler(new SkyWalkingTraceIdReadHandler(proxyHandler));
-//            } else {
             route.handler(proxyHandler);
-//            }
         });
     }
 
