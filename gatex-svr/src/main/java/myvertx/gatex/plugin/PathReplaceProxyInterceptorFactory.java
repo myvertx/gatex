@@ -33,8 +33,20 @@ public class PathReplaceProxyInterceptorFactory implements GatexProxyInterceptor
         Arguments.require(StringUtils.isNotBlank(replacePath), "并未配置%s的值".formatted(name));
 
         Iterator<String> detailIterator = Splitter.on(':').trimResults().omitEmptyStrings().split(replacePath).iterator();
-        String           regex          = detailIterator.next();
-        String           replacement    = detailIterator.hasNext() ? detailIterator.next() : "";
+        String           regexTemp      = detailIterator.next();
+        String           replacementTemp;
+        if (detailIterator.hasNext()) {
+            replacementTemp = detailIterator.next();
+        } else {
+            if (replacePath.contains(":")) {
+                replacementTemp = "";
+            } else {
+                replacementTemp = regexTemp;
+                regexTemp = "";
+            }
+        }
+        String regex       = regexTemp;
+        String replacement = replacementTemp;
         return new ProxyInterceptor() {
             @Override
             public void modifyProxyRequest(ProxyRequest proxyRequest) {
