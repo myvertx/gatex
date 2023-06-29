@@ -38,7 +38,7 @@ public class PathReplaceProxyInterceptorFactory implements GatexProxyInterceptor
         if (detailIterator.hasNext()) {
             replacementTemp = detailIterator.next();
         } else {
-            if (replacePath.contains(":")) {
+            if (replacePath.endsWith(":")) {
                 replacementTemp = "";
             } else {
                 replacementTemp = regexTemp;
