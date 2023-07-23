@@ -104,6 +104,13 @@ main:
                 port: 9203
                 client:
                     logActivity: true
+                filters:
+                    htmlBase: /pulsar-manager
+                    htmlReplace:
+                        - href=/:href=/pulsar-manager/
+                        - src=/:src=/pulsar-manager/
+                        - '"static/js":"pulsar-manager/static/js"'
+                        - '"static/css":"pulsar-manager/static/css"'
 web:
     config:
         isLogging: true

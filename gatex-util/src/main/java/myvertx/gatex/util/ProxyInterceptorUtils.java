@@ -21,6 +21,7 @@ import org.apache.pulsar.client.api.PulsarClient;
 import org.apache.pulsar.client.api.PulsarClientException;
 import org.apache.pulsar.client.api.Schema;
 import org.kie.api.runtime.KieSession;
+import org.kie.api.runtime.rule.AgendaGroup;
 import rebue.wheel.core.DroolsUtils;
 
 import java.net.URL;
@@ -102,7 +103,7 @@ public class ProxyInterceptorUtils {
                     || sRerouteUpperCase.startsWith("PUT:") || sRerouteUpperCase.startsWith("DELETE:")) {
                 int index = sReroute.indexOf(":");
                 rerouteMethodTemp = sReroute.substring(0, index);
-                sReroute = sReroute.substring(index + 1);
+                sReroute          = sReroute.substring(index + 1);
             }
             if (sReroute.startsWith("/")) {
                 rerouteUriTemp = sReroute;
@@ -110,14 +111,14 @@ public class ProxyInterceptorUtils {
                 URL url = new URL(sReroute);
                 rerouteHostTemp = url.getHost();
                 reroutePortTemp = url.getPort() == -1 ? url.getDefaultPort() : url.getPort();
-                rerouteUriTemp = url.getPath();
+                rerouteUriTemp  = url.getPath();
             }
         } else {
             @SuppressWarnings("unchecked") Map<String, Object> reroute = (Map<String, Object>) rerouteObject;
             rerouteMethodTemp = (String) reroute.get("method");
-            rerouteHostTemp = (String) reroute.get("host");
-            reroutePortTemp = (Integer) reroute.get("port");
-            rerouteUriTemp = (String) reroute.get("uri");
+            rerouteHostTemp   = (String) reroute.get("host");
+            reroutePortTemp   = (Integer) reroute.get("port");
+            rerouteUriTemp    = (String) reroute.get("uri");
             Arguments.require(StringUtils.isNotBlank(rerouteUriTemp), interceptorName + ".reroute.uri的值不能为空");
         }
 
@@ -237,17 +238,23 @@ public class ProxyInterceptorUtils {
                 String       uri          = proxyRequest.getURI();
                 log.debug("{}接收到请求: {} {}", interceptorName, uri, sRequestBody);
 
-                KieSession kieSession = DroolsUtils.newKieSession("gatex");
-                kieSession.getAgenda().getAgendaGroup(interceptorName + ".ProxyInterceptorC").setFocus();
                 RequestFact requestFact = RequestFact.builder()
                         .method(method)
                         .uri(uri)
                         .body(new JsonObject(sRequestBody))
                         .build();
-                kieSession.insert(requestFact);
-                int firedRulesCount = kieSession.fireAllRules();
-                log.debug("触发执行了改变body的规则数为{}", firedRulesCount);
-                kieSession.dispose();
+                KieSession kieSession = DroolsUtils.newKieSession("gatex");
+                try {
+                    AgendaGroup agendaGroup = kieSession.getAgenda().getAgendaGroup(interceptorName + ".ProxyInterceptorC");
+                    if (agendaGroup != null) {
+                        agendaGroup.setFocus();
+                        kieSession.insert(requestFact);
+                        int firedRulesCount = kieSession.fireAllRules();
+                        log.debug("触发执行了改变body的规则数为{}", firedRulesCount);
+                    }
+                } finally {
+                    kieSession.dispose();
+                }
 
                 log.debug("{}准备发送消息到{}: {}", interceptorName, sTopic, requestFact.getBody());
                 producer.send(requestFact.getMethod() + ":" + requestFact.getUri() + " " + requestFact.getBody());

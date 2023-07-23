@@ -7,7 +7,7 @@ import io.vertx.ext.web.RoutingContext;
  *
  * @author zbz
  */
-public interface GatexPredicater {
+public interface GatexPredicate {
 
     /**
      * 判断是否通过

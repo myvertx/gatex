@@ -16,8 +16,8 @@ import io.vertx.httpproxy.HttpProxy;
 import io.vertx.httpproxy.ProxyInterceptor;
 import jakarta.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
-import myvertx.gatex.api.GatexPredicater;
-import myvertx.gatex.api.GatexPredicaterFactory;
+import myvertx.gatex.api.GatexPredicateFactory;
+import myvertx.gatex.api.GatexPredicate;
 import myvertx.gatex.api.GatexProxyInterceptorFactory;
 import myvertx.gatex.api.GatexRoute;
 import myvertx.gatex.api.GatexRoute.Dst;
@@ -35,7 +35,7 @@ public class WebVerticle extends AbstractWebVerticle {
     /**
      * 断言器工厂列表
      */
-    private final Map<String, GatexPredicaterFactory>       _predicaterFactories       = new HashMap<>();
+    private final Map<String, GatexPredicateFactory>        _predicateFactories        = new HashMap<>();
     /**
      * 代理拦截器工厂列表
      */
@@ -49,8 +49,8 @@ public class WebVerticle extends AbstractWebVerticle {
     @Override
     protected void configRouter(final Router router) {
         log.info("注册断言器工厂");
-        final ServiceLoader<GatexPredicaterFactory> predicaterServiceLoader = ServiceLoader.load(GatexPredicaterFactory.class);
-        predicaterServiceLoader.forEach(factory -> this._predicaterFactories.put(factory.name(), factory));
+        final ServiceLoader<GatexPredicateFactory> predicaterServiceLoader = ServiceLoader.load(GatexPredicateFactory.class);
+        predicaterServiceLoader.forEach(factory -> this._predicateFactories.put(factory.name(), factory));
 
         log.info("注册代理拦截器工厂");
         final ServiceLoader<GatexProxyInterceptorFactory> proxyInterceptorFactory = ServiceLoader.load(GatexProxyInterceptorFactory.class);
@@ -232,10 +232,10 @@ public class WebVerticle extends AbstractWebVerticle {
         predicates.forEach((key, value) -> {
             try {
                 log.debug("添加断言 {}: {}", key, value);
-                final GatexPredicaterFactory factory = this._predicaterFactories.get(key);
+                final GatexPredicateFactory factory = this._predicateFactories.get(key);
                 Arguments.require(factory != null, "找不到名为" + key + "的断言工厂");
                 log.info("使用{}断言工厂创建断言", key);
-                final GatexPredicater predicater = factory.create(this.vertx, value);
+                final GatexPredicate predicater = factory.create(this.vertx, value);
                 route.handler(ctx -> {
                     log.debug("进入{}断言器判断", factory.name());
                     if (predicater.test(ctx)) {

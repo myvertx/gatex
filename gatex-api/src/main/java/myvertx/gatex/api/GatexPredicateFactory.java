@@ -7,7 +7,7 @@ import io.vertx.core.Vertx;
  *
  * @author zbz
  */
-public interface GatexPredicaterFactory {
+public interface GatexPredicateFactory {
 
     /**
      * @return 工厂名称
@@ -19,6 +19,6 @@ public interface GatexPredicaterFactory {
      *
      * @param options 创建拦截器的参数
      */
-    GatexPredicater create(Vertx vertx, Object options);
+    GatexPredicate create(Vertx vertx, Object options);
 
 }
