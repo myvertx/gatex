@@ -20,8 +20,6 @@ import org.apache.pulsar.client.api.Producer;
 import org.apache.pulsar.client.api.PulsarClient;
 import org.apache.pulsar.client.api.PulsarClientException;
 import org.apache.pulsar.client.api.Schema;
-import org.kie.api.runtime.KieSession;
-import org.kie.api.runtime.rule.AgendaGroup;
 import rebue.wheel.core.DroolsUtils;
 
 import java.net.URL;
@@ -243,19 +241,8 @@ public class ProxyInterceptorUtils {
                         .uri(uri)
                         .body(new JsonObject(sRequestBody))
                         .build();
-                KieSession kieSession = DroolsUtils.newKieSession("gatex");
-                try {
-                    AgendaGroup agendaGroup = kieSession.getAgenda().getAgendaGroup(interceptorName + ".ProxyInterceptorC");
-                    if (agendaGroup != null) {
-                        agendaGroup.setFocus();
-                        kieSession.insert(requestFact);
-                        int firedRulesCount = kieSession.fireAllRules();
-                        log.debug("触发执行了改变body的规则数为{}", firedRulesCount);
-                    }
-                } finally {
-                    kieSession.dispose();
-                }
-
+                DroolsUtils.fireRules(
+                        "gatex", interceptorName + ".ProxyInterceptorC", requestFact);
                 log.debug("{}准备发送消息到{}: {}", interceptorName, sTopic, requestFact.getBody());
                 producer.send(requestFact.getMethod() + ":" + requestFact.getUri() + " " + requestFact.getBody());
             } catch (final PulsarClientException e) {

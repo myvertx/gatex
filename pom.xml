@@ -18,7 +18,7 @@
         <maven.compiler.source>18</maven.compiler.source>
         <maven.compiler.target>18</maven.compiler.target>
 
-        <wheel.version>2.1.6</wheel.version>
+        <wheel.version>2.1.7</wheel.version>
     </properties>
 
     <dependencyManagement>
