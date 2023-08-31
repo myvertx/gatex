@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>myvertx.gatex</groupId>
     <artifactId>gatex</artifactId>
-    <version>1.1.24</version>
+    <version>1.1.25</version>
     <packaging>pom</packaging>
     <description>基于vert.x构建的网关</description>
 
@@ -18,7 +18,7 @@
         <maven.compiler.source>18</maven.compiler.source>
         <maven.compiler.target>18</maven.compiler.target>
 
-        <wheel.version>2.1.7</wheel.version>
+        <wheel.version>2.1.8</wheel.version>
     </properties>
 
     <dependencyManagement>
