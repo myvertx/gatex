@@ -1,7 +1,12 @@
 package myvertx.gatex.plugin;
 
+import java.util.Iterator;
+
+import org.apache.commons.lang3.StringUtils;
+
 import com.google.common.base.Splitter;
 import com.google.inject.Injector;
+
 import io.vertx.core.Vertx;
 import io.vertx.core.impl.Arguments;
 import io.vertx.httpproxy.ProxyInterceptor;
@@ -9,9 +14,6 @@ import io.vertx.httpproxy.ProxyRequest;
 import lombok.extern.slf4j.Slf4j;
 import myvertx.gatex.api.GatexProxyInterceptorFactory;
 import myvertx.gatex.api.GatexRoute;
-import org.apache.commons.lang3.StringUtils;
-
-import java.util.Iterator;
 
 /**
  * 替换请求路径的代理拦截器工厂
@@ -32,7 +34,8 @@ public class PathReplaceProxyInterceptorFactory implements GatexProxyInterceptor
         final String replacePath = (String) options;
         Arguments.require(StringUtils.isNotBlank(replacePath), "并未配置%s的值".formatted(name));
 
-        Iterator<String> detailIterator = Splitter.on(':').trimResults().omitEmptyStrings().split(replacePath).iterator();
+        Iterator<String> detailIterator = Splitter.on(':').trimResults().omitEmptyStrings().split(replacePath)
+                .iterator();
         String           regexTemp      = detailIterator.next();
         String           replacementTemp;
         if (detailIterator.hasNext()) {
@@ -42,7 +45,7 @@ public class PathReplaceProxyInterceptorFactory implements GatexProxyInterceptor
                 replacementTemp = "";
             } else {
                 replacementTemp = regexTemp;
-                regexTemp = "";
+                regexTemp       = "";
             }
         }
         String regex       = regexTemp;

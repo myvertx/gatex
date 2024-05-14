@@ -1,6 +1,7 @@
 package myvertx.gatex.api;
 
 import com.google.inject.Injector;
+
 import io.vertx.core.Vertx;
 import io.vertx.httpproxy.ProxyInterceptor;
 

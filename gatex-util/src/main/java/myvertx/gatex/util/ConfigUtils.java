@@ -1,18 +1,20 @@
 package myvertx.gatex.util;
 
-import com.google.common.base.Splitter;
-import io.vertx.core.impl.Arguments;
-import io.vertx.httpproxy.ProxyContext;
-import lombok.extern.slf4j.Slf4j;
-import myvertx.gatex.mo.RegexReplacementMo;
-import myvertx.gatex.mo.SrcPathMo;
-import org.apache.commons.lang3.StringUtils;
-
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
+
+import org.apache.commons.lang3.StringUtils;
+
+import com.google.common.base.Splitter;
+
+import io.vertx.core.impl.Arguments;
+import io.vertx.httpproxy.ProxyContext;
+import lombok.extern.slf4j.Slf4j;
+import myvertx.gatex.mo.RegexReplacementMo;
+import myvertx.gatex.mo.SrcPathMo;
 
 @Slf4j
 public class ConfigUtils {
@@ -86,24 +88,25 @@ public class ConfigUtils {
         // 默认":"为分隔符
         char separator = ':';
         // 如果":"不是有且仅有1个，那么以第1个字符为分隔符
-        int index = regexReplacement.indexOf(separator);
+        int  index     = regexReplacement.indexOf(separator);
         if (index == -1 || index != regexReplacement.lastIndexOf(separator)) {
             separator = regexReplacement.charAt(0);
             // 如果分隔符不是有且仅有1个，那么报格式错误
-            index = regexReplacement.indexOf(separator);
+            index     = regexReplacement.indexOf(separator);
             if (index == -1 || index != regexReplacement.lastIndexOf(separator)) {
                 throw new IllegalArgumentException("配置%s的replacement格式错误".formatted(pluginName));
             }
         }
-        Iterator<String> replacementIterator = Splitter.on(separator).trimResults().omitEmptyStrings().split(regexReplacement).iterator();
+        Iterator<String> replacementIterator = Splitter.on(separator).trimResults().omitEmptyStrings()
+                .split(regexReplacement).iterator();
         Arguments.require(replacementIterator.hasNext(), "并未配置%s的replacement".formatted(pluginName));
         String regex       = replacementIterator.next();
         String replacement = replacementIterator.hasNext() ? replacementIterator.next() : "";
         Arguments.require(!replacementIterator.hasNext(), "配置%s的replacement格式错误".formatted(pluginName));
         return RegexReplacementMo.builder()
-            .regex(regex)
-            .replacement(replacement)
-            .build();
+                .regex(regex)
+                .replacement(replacement)
+                .build();
     }
 
     public static List<RegexReplacementMo> readReplacements(String pluginName, List<String> replacementList) {
@@ -113,6 +116,5 @@ public class ConfigUtils {
         }
         return result;
     }
-
 
 }

@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
@@ -12,7 +13,7 @@
     <artifactId>gatex-svr</artifactId>
 
     <dependencies>
-        <!-- 此包中有与vertx重名重路径的类，所以放在最前-->
+        <!-- 此包中有与vertx重名重路径的类，所以放在最前 -->
         <dependency>
             <groupId>com.github.rebue.wheel</groupId>
             <artifactId>wheel-vertx</artifactId>
@@ -137,8 +138,8 @@
             <scope>provided</scope>
         </dependency>
 
-        <!-- 代码生成-->
-        <!-- lombok的依赖必须在最前面，否则其它生成器在没有lombok生成代码时，有可能会失效-->
+        <!-- 代码生成 -->
+        <!-- lombok的依赖必须在最前面，否则其它生成器在没有lombok生成代码时，有可能会失效 -->
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
@@ -180,7 +181,7 @@
                     <groupId>io.netty</groupId>
                     <artifactId>netty-resolver-dns-native-macos</artifactId>
                     <classifier>osx-x86_64</classifier>
-                    <!--<version>Should align with netty version that Vert.x uses</version>-->
+                    <!--<version>Should align with netty version that Vert.x uses</version> -->
                 </dependency>
             </dependencies>
         </profile>

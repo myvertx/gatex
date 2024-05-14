@@ -1,6 +1,13 @@
 package myvertx.gatex.plugin;
 
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.commons.lang3.StringUtils;
+
 import com.google.inject.Injector;
+
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
@@ -16,12 +23,7 @@ import myvertx.gatex.api.GatexProxyInterceptorFactory;
 import myvertx.gatex.api.GatexRoute;
 import myvertx.gatex.mo.SrcPathMo;
 import myvertx.gatex.util.ConfigUtils;
-import org.apache.commons.lang3.StringUtils;
 import rebue.wheel.core.UriUtils;
-
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
 
 /**
  * 给html内容中的head节点补上base节点的代理拦截器工厂

@@ -1,5 +1,13 @@
 package myvertx.gatex.verticle;
 
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.ServiceLoader;
+
+import org.apache.commons.lang3.StringUtils;
+
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpClientOptions;
 import io.vertx.core.http.HttpMethod;
@@ -16,21 +24,18 @@ import io.vertx.httpproxy.HttpProxy;
 import io.vertx.httpproxy.ProxyInterceptor;
 import jakarta.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
-import myvertx.gatex.api.GatexPredicateFactory;
 import myvertx.gatex.api.GatexPredicate;
+import myvertx.gatex.api.GatexPredicateFactory;
 import myvertx.gatex.api.GatexProxyInterceptorFactory;
 import myvertx.gatex.api.GatexRoute;
 import myvertx.gatex.api.GatexRoute.Dst;
 import myvertx.gatex.config.MainProperties;
-import org.apache.commons.lang3.StringUtils;
 import rebue.wheel.vertx.verticle.AbstractWebVerticle;
-
-import java.util.*;
 
 @Slf4j
 public class WebVerticle extends AbstractWebVerticle {
     @Inject
-    private MainProperties mainProperties;
+    private MainProperties                                  mainProperties;
 
     /**
      * 断言器工厂列表
@@ -49,11 +54,13 @@ public class WebVerticle extends AbstractWebVerticle {
     @Override
     protected void configRouter(final Router router) {
         log.info("注册断言器工厂");
-        final ServiceLoader<GatexPredicateFactory> predicaterServiceLoader = ServiceLoader.load(GatexPredicateFactory.class);
+        final ServiceLoader<GatexPredicateFactory> predicaterServiceLoader = ServiceLoader
+                .load(GatexPredicateFactory.class);
         predicaterServiceLoader.forEach(factory -> this._predicateFactories.put(factory.name(), factory));
 
         log.info("注册代理拦截器工厂");
-        final ServiceLoader<GatexProxyInterceptorFactory> proxyInterceptorFactory = ServiceLoader.load(GatexProxyInterceptorFactory.class);
+        final ServiceLoader<GatexProxyInterceptorFactory> proxyInterceptorFactory = ServiceLoader
+                .load(GatexProxyInterceptorFactory.class);
         proxyInterceptorFactory.forEach(factory -> this._proxyInterceptorFactories.put(factory.name(), factory));
 
         log.info("根据配置中的路由列表来配置路由");
@@ -152,12 +159,12 @@ public class WebVerticle extends AbstractWebVerticle {
         log.info("创建HTTP代理");
         // 获取HttpClientOptions
         final HttpClientOptions httpClientOptions = dst.getClient() == null ? new HttpClientOptions()
-            : new HttpClientOptions(JsonObject.mapFrom(dst.getClient()));
+                : new HttpClientOptions(JsonObject.mapFrom(dst.getClient()));
         // 创建httpClient
-        final HttpClient httpClient = this.vertx.createHttpClient(httpClientOptions);
+        final HttpClient        httpClient        = this.vertx.createHttpClient(httpClientOptions);
 
-        HttpProxy      httpProxy = HttpProxy.reverseProxy(httpClient);
-        RequestOptions requestOptions;
+        HttpProxy               httpProxy         = HttpProxy.reverseProxy(httpClient);
+        RequestOptions          requestOptions;
         if (dst.getRequest() == null) {
             requestOptions = new RequestOptions();
         } else {
@@ -246,7 +253,8 @@ public class WebVerticle extends AbstractWebVerticle {
                 });
             } catch (Exception e) {
                 log.error("添加" + key + "断言器异常", e);
-                if (mainProperties.getStrict()) throw e;
+                if (mainProperties.getStrict())
+                    throw e;
             }
         });
     }
@@ -263,10 +271,10 @@ public class WebVerticle extends AbstractWebVerticle {
             return;
         }
 
-//        if (SkyWalkingUtils.isEnabled()) {
-//            log.debug("添加将SkyWalking的traceId写入上下文的代理");
-//            httpProxy.addInterceptor(new SkyWalkingTraceIdWriteProxyInterceptor());
-//        }
+        // if (SkyWalkingUtils.isEnabled()) {
+        // log.debug("添加将SkyWalking的traceId写入上下文的代理");
+        // httpProxy.addInterceptor(new SkyWalkingTraceIdWriteProxyInterceptor());
+        // }
 
         proxyInterceptors.forEach((key, value) -> {
             try {
@@ -274,13 +282,15 @@ public class WebVerticle extends AbstractWebVerticle {
                 final GatexProxyInterceptorFactory factory = this._proxyInterceptorFactories.get(key);
                 Arguments.require(factory != null, "找不到名为" + key + "的代理拦截器");
                 ProxyInterceptor proxyInterceptor = factory.create(this.vertx, this.injector, dst, value);
-//                if (SkyWalkingUtils.isEnabled()) {
-//                    proxyInterceptor = new SkyWalkingTraceIdReadProxyInterceptor(proxyInterceptor);
-//                }
+                // if (SkyWalkingUtils.isEnabled()) {
+                // proxyInterceptor = new
+                // SkyWalkingTraceIdReadProxyInterceptor(proxyInterceptor);
+                // }
                 httpProxy.addInterceptor(proxyInterceptor);
             } catch (Exception e) {
                 log.error("添加" + key + "代理拦截器异常", e);
-                if (mainProperties.getStrict()) throw e;
+                if (mainProperties.getStrict())
+                    throw e;
             }
         });
     }

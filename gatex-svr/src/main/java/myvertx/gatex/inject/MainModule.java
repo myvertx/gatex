@@ -2,6 +2,7 @@ package myvertx.gatex.inject;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
+
 import io.vertx.core.json.JsonObject;
 import jakarta.inject.Named;
 import jakarta.inject.Singleton;

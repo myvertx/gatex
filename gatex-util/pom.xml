@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <artifactId>gatex</artifactId>
@@ -94,8 +94,8 @@
             <artifactId>junit-jupiter</artifactId>
         </dependency>
 
-        <!-- 代码生成-->
-        <!-- lombok的依赖必须在最前面，否则其它生成器在没有lombok生成代码时，有可能会失效-->
+        <!-- 代码生成 -->
+        <!-- lombok的依赖必须在最前面，否则其它生成器在没有lombok生成代码时，有可能会失效 -->
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>

@@ -1,13 +1,27 @@
 package myvertx.gatex.util;
 
+import java.net.URL;
+import java.util.Map;
+
+import org.apache.commons.lang3.StringUtils;
+import org.apache.pulsar.client.api.Producer;
+import org.apache.pulsar.client.api.PulsarClient;
+import org.apache.pulsar.client.api.PulsarClientException;
+import org.apache.pulsar.client.api.Schema;
+
 import com.google.inject.Injector;
+
 import io.vertx.core.Future;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.impl.Arguments;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.WebClient;
-import io.vertx.httpproxy.*;
+import io.vertx.httpproxy.Body;
+import io.vertx.httpproxy.ProxyContext;
+import io.vertx.httpproxy.ProxyInterceptor;
+import io.vertx.httpproxy.ProxyRequest;
+import io.vertx.httpproxy.ProxyResponse;
 import io.vertx.httpproxy.impl.BufferingWriteStream;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -15,18 +29,13 @@ import myvertx.gatex.api.GatexRoute;
 import myvertx.gatex.drools.fact.RequestFact;
 import myvertx.gatex.handler.ParsedBodyHandler;
 import myvertx.gatex.handler.RerouteHandler;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.pulsar.client.api.Producer;
-import org.apache.pulsar.client.api.PulsarClient;
-import org.apache.pulsar.client.api.PulsarClientException;
-import org.apache.pulsar.client.api.Schema;
-import rebue.wheel.core.DroolsUtils;
-
-import java.net.URL;
-import java.util.Map;
+import rebue.wheel.core.drools.DroolsWatcher;
 
 @Slf4j
 public class ProxyInterceptorUtils {
+    static {
+        DroolsWatcher.init();
+    }
 
     /**
      * 处理代理请求
@@ -35,7 +44,8 @@ public class ProxyInterceptorUtils {
      * @param parsedBodyHandler 解析body后的处理器
      * @return 代理响应的Future
      */
-    public static Future<ProxyResponse> handleRequest(final ProxyContext proxyContext, ParsedBodyHandler parsedBodyHandler) {
+    public static Future<ProxyResponse> handleRequest(final ProxyContext proxyContext,
+            ParsedBodyHandler parsedBodyHandler) {
         log.debug("handleProxyRequest");
 
         final ProxyRequest         request = proxyContext.request();
@@ -61,7 +71,8 @@ public class ProxyInterceptorUtils {
         });
     }
 
-    public static ProxyInterceptor createProxyInterceptorA(final String interceptorName, final Object options, ParsedBodyHandler parsedBodyHandler) {
+    public static ProxyInterceptor createProxyInterceptorA(final String interceptorName, final Object options,
+            ParsedBodyHandler parsedBodyHandler) {
         log.info("createProxyInterceptorA {}: {}", interceptorName, options);
         return new ProxyInterceptor() {
             @Override
@@ -82,14 +93,16 @@ public class ProxyInterceptorUtils {
      * @return 拦截器
      */
     @SneakyThrows
-    public static ProxyInterceptor createProxyInterceptorB(String interceptorName, GatexRoute.Dst dst, final Object options, Injector injector, RerouteHandler rerouteHandler) {
+    public static ProxyInterceptor createProxyInterceptorB(String interceptorName, GatexRoute.Dst dst,
+            final Object options, Injector injector, RerouteHandler rerouteHandler) {
         log.info("createProxyInterceptorB {}: {}", interceptorName, options);
 
         Arguments.require(options != null, "并未配置" + interceptorName + "的值");
         Arguments.require(options instanceof Map, interceptorName + "的值必须为Map类型");
 
-        @SuppressWarnings("unchecked") final Map<String, Object> optionsMap    = (Map<String, Object>) options;
-        final Object                                             rerouteObject = optionsMap.get("reroute");
+        @SuppressWarnings("unchecked")
+        final Map<String, Object> optionsMap    = (Map<String, Object>) options;
+        final Object              rerouteObject = optionsMap.get("reroute");
         Arguments.require(rerouteObject != null, "并未配置" + interceptorName + ".reroute的值");
         String  rerouteMethodTemp = null;
         String  rerouteHostTemp   = null;
@@ -112,7 +125,8 @@ public class ProxyInterceptorUtils {
                 rerouteUriTemp  = url.getPath();
             }
         } else {
-            @SuppressWarnings("unchecked") Map<String, Object> reroute = (Map<String, Object>) rerouteObject;
+            @SuppressWarnings("unchecked")
+            Map<String, Object> reroute = (Map<String, Object>) rerouteObject;
             rerouteMethodTemp = (String) reroute.get("method");
             rerouteHostTemp   = (String) reroute.get("host");
             reroutePortTemp   = (Integer) reroute.get("port");
@@ -120,12 +134,13 @@ public class ProxyInterceptorUtils {
             Arguments.require(StringUtils.isNotBlank(rerouteUriTemp), interceptorName + ".reroute.uri的值不能为空");
         }
 
-        String  rerouteMethod = rerouteMethodTemp;
-        String  rerouteHost   = StringUtils.isNotBlank(rerouteHostTemp) ? rerouteHostTemp : dst.getHost();
-        Integer reroutePort   = reroutePortTemp != null && reroutePortTemp != 0 ? reroutePortTemp : dst.getPort();
-        String  rerouteUri    = rerouteUriTemp;
+        String          rerouteMethod = rerouteMethodTemp;
+        String          rerouteHost   = StringUtils.isNotBlank(rerouteHostTemp) ? rerouteHostTemp : dst.getHost();
+        Integer         reroutePort   = reroutePortTemp != null && reroutePortTemp != 0 ? reroutePortTemp
+                : dst.getPort();
+        String          rerouteUri    = rerouteUriTemp;
 
-        final WebClient webClient = injector.getInstance(WebClient.class);
+        final WebClient webClient     = injector.getInstance(WebClient.class);
         return new ProxyInterceptor() {
             @Override
             public Future<ProxyResponse> handleProxyRequest(final ProxyContext proxyContext) {
@@ -161,7 +176,8 @@ public class ProxyInterceptorUtils {
                             if (rerouteHandler.isReroute(sRequestBody, sResponseBody)) {
                                 log.debug("调用第一个接口结果不能返回，需要转向调用第二个接口");
                                 RequestFact requestFact = RequestFact.builder()
-                                        .method(StringUtils.isNotBlank(rerouteMethod) ? rerouteMethod : proxyRequest.getMethod().name())
+                                        .method(StringUtils.isNotBlank(rerouteMethod) ? rerouteMethod
+                                                : proxyRequest.getMethod().name())
                                         .host(rerouteHost)
                                         .port(reroutePort)
                                         .uri(rerouteUri)
@@ -170,7 +186,10 @@ public class ProxyInterceptorUtils {
                                 return rerouteHandler.setRequestOfReroute(requestFact)
                                         .compose(newRequestFact -> {
                                             log.debug("ctx.reroute: {}", newRequestFact);
-                                            return webClient.request(HttpMethod.valueOf(newRequestFact.getMethod()), newRequestFact.getPort(), newRequestFact.getHost(), newRequestFact.getUri())
+                                            return webClient
+                                                    .request(HttpMethod.valueOf(newRequestFact.getMethod()),
+                                                            newRequestFact.getPort(), newRequestFact.getHost(),
+                                                            newRequestFact.getUri())
                                                     .sendJsonObject(newRequestFact.getBody())
                                                     .compose(bufferHttpResponse -> {
                                                         // 重新设置body
@@ -216,13 +235,15 @@ public class ProxyInterceptorUtils {
      * @return 拦截器
      */
     @SneakyThrows
-    public static ProxyInterceptor createProxyInterceptorC(final String interceptorName, final Object options, Injector injector) {
+    public static ProxyInterceptor createProxyInterceptorC(final String interceptorName, final Object options,
+            Injector injector) {
         log.info("createProxyInterceptorC {}: {}", interceptorName, options);
         Arguments.require(options != null, "并未配置" + interceptorName + "的值");
         Arguments.require(options instanceof Map, interceptorName + "的值必须为Map类型");
 
-        @SuppressWarnings("unchecked") final Map<String, Object> optionsMap  = (Map<String, Object>) options;
-        final Object                                             topicObject = optionsMap.get("topic");
+        @SuppressWarnings("unchecked")
+        final Map<String, Object> optionsMap  = (Map<String, Object>) options;
+        final Object              topicObject = optionsMap.get("topic");
         Arguments.require(topicObject != null, "并未配置" + interceptorName + ".topic的值");
         String sTopic = (String) topicObject;
         Arguments.require(StringUtils.isNotBlank(sTopic), interceptorName + ".topic的值不能为空");
@@ -241,7 +262,7 @@ public class ProxyInterceptorUtils {
                         .uri(uri)
                         .body(new JsonObject(sRequestBody))
                         .build();
-                DroolsUtils.fireRules(
+                DroolsWatcher.fireRules(
                         "gatex", interceptorName + ".ProxyInterceptorC", requestFact);
                 log.debug("{}准备发送消息到{}: {}", interceptorName, sTopic, requestFact.getBody());
                 producer.send(requestFact.getMethod() + ":" + requestFact.getUri() + " " + requestFact.getBody());

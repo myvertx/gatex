@@ -1,6 +1,13 @@
 package myvertx.gatex.plugin;
 
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.commons.lang3.StringUtils;
+
 import com.google.inject.Injector;
+
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
@@ -17,11 +24,6 @@ import myvertx.gatex.api.GatexRoute;
 import myvertx.gatex.mo.HtmlReplaceConfigMo;
 import myvertx.gatex.mo.RegexReplacementMo;
 import myvertx.gatex.util.ConfigUtils;
-import org.apache.commons.lang3.StringUtils;
-
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
 
 /**
  * 给html内容中的链接补上前缀的代理拦截器工厂
@@ -52,25 +54,23 @@ public class HtmlReplaceProxyInterceptorFactory implements GatexProxyInterceptor
                     regexReplacements.add(ConfigUtils.readReplacement(name, regexReplacement));
                 }
                 htmlReplaceConfigs.add(HtmlReplaceConfigMo.builder()
-                    .regexReplacements(regexReplacements)
-                    .build());
+                        .regexReplacements(regexReplacements)
+                        .build());
             } else if (optionsList.get(0) instanceof Map<?, ?>) {
                 for (Map<String, Object> replacementMap : (List<Map<String, Object>>) optionsList) {
                     Object                   replacement = replacementMap.get("replacement");
                     List<RegexReplacementMo> regexReplacements;
                     if (replacement instanceof String regexReplacement) {
-                        regexReplacements = new LinkedList<>() {{
-                            add(ConfigUtils.readReplacement(name, regexReplacement));
-                        }};
+                        regexReplacements = List.of(ConfigUtils.readReplacement(name, regexReplacement));
                     } else if (replacement instanceof List<?> regexReplacementList) {
                         regexReplacements = ConfigUtils.readReplacements(name, (List<String>) regexReplacementList);
                     } else {
                         throw new IllegalArgumentException("配置%s的replacement格式错误".formatted(name));
                     }
                     htmlReplaceConfigs.add(HtmlReplaceConfigMo.builder()
-                        .srcPaths(ConfigUtils.readSrcPath(name, replacementMap))
-                        .regexReplacements(regexReplacements)
-                        .build());
+                            .srcPaths(ConfigUtils.readSrcPath(name, replacementMap))
+                            .regexReplacements(regexReplacements)
+                            .build());
                 }
             } else {
                 throw new IllegalArgumentException("配置%s的格式错误".formatted(name));
@@ -90,7 +90,7 @@ public class HtmlReplaceProxyInterceptorFactory implements GatexProxyInterceptor
                 log.debug("state code: {}; content-type: {}", statusCode, contentType);
                 try {
                     if (statusCode == 200 && StringUtils.isNotBlank(contentType)
-                        && (contentType.contains("text/html") || contentType.contains("application/javascript"))) {
+                            && (contentType.contains("text/html") || contentType.contains("application/javascript"))) {
                         for (HtmlReplaceConfigMo replaceConfig : htmlReplaceConfigs) {
                             log.debug("判断是否匹配srcPath: {}", replaceConfig.getSrcPaths());
                             if (ConfigUtils.isMatchSrcPath(proxyContext, replaceConfig.getSrcPaths())) {
@@ -101,8 +101,10 @@ public class HtmlReplaceProxyInterceptorFactory implements GatexProxyInterceptor
                                     log.debug("解析响应的body成功");
                                     String content = buffer.content().toString();
                                     for (RegexReplacementMo regexReplacementMo : replaceConfig.getRegexReplacements()) {
-                                        log.debug("替换文本: {} -> {}", regexReplacementMo.getRegex(), regexReplacementMo.getReplacement());
-                                        content = content.replaceAll(regexReplacementMo.getRegex(), regexReplacementMo.getReplacement());
+                                        log.debug("替换文本: {} -> {}", regexReplacementMo.getRegex(),
+                                                regexReplacementMo.getReplacement());
+                                        content = content.replaceAll(regexReplacementMo.getRegex(),
+                                                regexReplacementMo.getReplacement());
                                     }
 
                                     // 重新设置body

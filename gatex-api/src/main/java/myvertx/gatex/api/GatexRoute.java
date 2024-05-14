@@ -1,9 +1,9 @@
 package myvertx.gatex.api;
 
-import lombok.Data;
-
 import java.util.LinkedHashMap;
 import java.util.Map;
+
+import lombok.Data;
 
 @Data
 public class GatexRoute {

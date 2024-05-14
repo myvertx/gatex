@@ -1,7 +1,13 @@
 package myvertx.gatex.plugin;
 
+import java.util.Iterator;
+import java.util.Map;
+
+import org.apache.commons.lang3.StringUtils;
+
 import com.google.common.base.Splitter;
 import com.google.inject.Injector;
+
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpHeaders;
@@ -12,10 +18,6 @@ import io.vertx.httpproxy.ProxyResponse;
 import lombok.extern.slf4j.Slf4j;
 import myvertx.gatex.api.GatexProxyInterceptorFactory;
 import myvertx.gatex.api.GatexRoute;
-import org.apache.commons.lang3.StringUtils;
-
-import java.util.Iterator;
-import java.util.Map;
 
 /**
  * 响应301/302时修改Location值的代理拦截器工厂
@@ -47,7 +49,8 @@ public class RedirectProxyInterceptorFactory implements GatexProxyInterceptorFac
         String locationPrefixReplaceSrcTemp = null;
         String locationPrefixReplaceDstTemp = null;
         if (StringUtils.isNotBlank(locationPrefixReplaceConfig)) {
-            Iterator<String> detailIterator = Splitter.on(':').trimResults().omitEmptyStrings().split(locationPrefixReplaceConfig).iterator();
+            Iterator<String> detailIterator = Splitter.on(':').trimResults().omitEmptyStrings()
+                    .split(locationPrefixReplaceConfig).iterator();
             locationPrefixReplaceSrcTemp = detailIterator.next();
             locationPrefixReplaceDstTemp = detailIterator.hasNext() ? detailIterator.next() : "";
         }
