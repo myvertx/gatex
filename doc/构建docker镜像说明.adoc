@@ -1,0 +1,11 @@
+= 构建docker镜像说明
+
+== 注意事项
+. 需要编译镜像时，请编辑 `gateway-svr` 项目的 `pom.xml` 文件，将 `dockerfile-maven-plugin` 插件下 `executions\execution\phase` 为 `install` 行的注释打开，而给无任何内容的 `phase` 行加上注释；如果不需要编译镜像，则反过来操作
+. 如果是mac系统，请编辑 `~/.docker/config.json` 文件，将 `credsStore` 改为 `credStore`，否则编译时会报 `Cannot run program "docker-credential-desktop": error=2, No such file or directory` 的异常
+
+== 编译镜像
+[,shell]
+----
+mvn clean install
+----

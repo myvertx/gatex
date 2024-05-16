@@ -63,9 +63,9 @@ public class GatexRoute {
          */
         private String              pathPrefixReplace;
         /**
-         * 静态网站的HistoryMode(Hash/Html5/Memory)，默认为Html5
+         * 静态网站的HistoryMode(Hash/Html5/Memory)，默认为Hash
          */
-        private String              historyMode = "Html5";
+        private String              historyMode = "Hash";
         /**
          * 是否SSL加密
          */

@@ -266,26 +266,17 @@ public class WebVerticle extends AbstractWebVerticle {
      * @param dst       目的地的配置
      */
     private void addProxyInterceptors(final HttpProxy httpProxy, Dst dst) {
-        final Map<String, Object> proxyInterceptors = dst.getFilters();
-        if (proxyInterceptors == null || proxyInterceptors.isEmpty()) {
+        final Map<String, Object> filtersOptions = dst.getFilters();
+        if (filtersOptions == null || filtersOptions.isEmpty()) {
             return;
         }
 
-        // if (SkyWalkingUtils.isEnabled()) {
-        // log.debug("添加将SkyWalking的traceId写入上下文的代理");
-        // httpProxy.addInterceptor(new SkyWalkingTraceIdWriteProxyInterceptor());
-        // }
-
-        proxyInterceptors.forEach((key, value) -> {
+        filtersOptions.forEach((key, value) -> {
             try {
                 log.debug("添加代理拦截器 {}: {}", key, value);
                 final GatexProxyInterceptorFactory factory = this._proxyInterceptorFactories.get(key);
                 Arguments.require(factory != null, "找不到名为" + key + "的代理拦截器");
                 ProxyInterceptor proxyInterceptor = factory.create(this.vertx, this.injector, dst, value);
-                // if (SkyWalkingUtils.isEnabled()) {
-                // proxyInterceptor = new
-                // SkyWalkingTraceIdReadProxyInterceptor(proxyInterceptor);
-                // }
                 httpProxy.addInterceptor(proxyInterceptor);
             } catch (Exception e) {
                 log.error("添加" + key + "代理拦截器异常", e);

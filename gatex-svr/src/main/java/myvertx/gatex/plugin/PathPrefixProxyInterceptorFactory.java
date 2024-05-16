@@ -39,7 +39,6 @@ public class PathPrefixProxyInterceptorFactory implements GatexProxyInterceptorF
                 proxyRequest.setURI(uri);
                 log.debug("请求地址: {}", uri);
             }
-
         };
     }
 }
