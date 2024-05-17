@@ -1,7 +1,7 @@
 ARG VERSION
 
 # 基础镜像
-FROM nnzbz/vertx:4.5.7-alpine
+FROM nnzbz/vertx-app:4.5.7-alpine
 # 镜像的作者和邮箱
 LABEL maintainer="nnzbz@163.com"
 # 镜像的版本
@@ -15,7 +15,7 @@ LABEL description="gatex-svr"
 ARG JAR_FILE
 
 # 加入jar包
-COPY target/${JAR_FILE} /usr/local/vertx/lib/myservice.jar
+COPY target/${JAR_FILE} /usr/local/vertx/myservice.jar
 # 加入资源
 COPY src/main/resources/config/application.yml /usr/local/vertx/config/
 COPY src/main/resources/config/option.json /usr/local/vertx/config/
