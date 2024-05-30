@@ -1,9 +1,3 @@
 {
-    "preferNativeTransport": true,
-    "tracingOptions": {
-        "serviceName": "gatex-svr",
-        "senderOptions": {
-            "senderEndpoint": "http://zipkin_zipkin:9411/api/v2/spans"
-        }
-    }
+    "preferNativeTransport": true
 }

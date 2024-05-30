@@ -1,10 +1,6 @@
 package myvertx.gatex.verticle;
 
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.ServiceLoader;
+import java.util.*;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -56,12 +52,18 @@ public class WebVerticle extends AbstractWebVerticle {
         log.info("注册断言器工厂");
         final ServiceLoader<GatexPredicateFactory> predicaterServiceLoader = ServiceLoader
                 .load(GatexPredicateFactory.class);
-        predicaterServiceLoader.forEach(factory -> this._predicateFactories.put(factory.name(), factory));
+        predicaterServiceLoader.forEach(factory -> {
+            log.info("注册断言器工厂: {}", factory.name());
+            this._predicateFactories.put(factory.name(), factory);
+        });
 
         log.info("注册代理拦截器工厂");
         final ServiceLoader<GatexProxyInterceptorFactory> proxyInterceptorFactory = ServiceLoader
                 .load(GatexProxyInterceptorFactory.class);
-        proxyInterceptorFactory.forEach(factory -> this._proxyInterceptorFactories.put(factory.name(), factory));
+        proxyInterceptorFactory.forEach(factory -> {
+            log.info("注册代理拦截器工厂: {}", factory.name());
+            this._proxyInterceptorFactories.put(factory.name(), factory);
+        });
 
         log.info("根据配置中的路由列表来配置路由");
         log.info("********************************************************");
@@ -206,7 +208,7 @@ public class WebVerticle extends AbstractWebVerticle {
      * @param router  路由器
      * @param routes  要加入的路由列表
      * @param pathStr 路由监听的路径
-     * @param isRegex 路径是否是正则表达式
+     * @param isRegex 路径是否正则表达式
      */
     private void addRoute(final Router router, final List<Route> routes, String pathStr, final boolean isRegex) {
         String[] methods = null;
