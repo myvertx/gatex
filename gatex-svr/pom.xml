@@ -15,7 +15,7 @@
     <properties>
         <docker.image.prefix>docker.io/nnzbz</docker.image.prefix>
         <main.class>io.vertx.core.Launcher</main.class>
-        <main.verticle>io.github.myvertx.gatex.verticle.MainVerticle</main.verticle>
+        <main.verticle>myvertx.gatex.verticle.MainVerticle</main.verticle>
     </properties>
 
     <url>https://github.com/myvertx/gatex</url>
@@ -178,7 +178,7 @@
             <!--                            <mainClass>io.vertx.core.Launcher</mainClass>-->
             <!--                        </manifest>-->
             <!--                        <manifestEntries>-->
-            <!--                            <Main-Verticle>io.github.myvertx.gatex.verticle.MainVerticle</Main-Verticle>-->
+            <!--                            <Main-Verticle>myvertx.gatex.verticle.MainVerticle</Main-Verticle>-->
             <!--                        </manifestEntries>-->
             <!--                    </archive>-->
             <!--                </configuration>-->
