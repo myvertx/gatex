@@ -90,7 +90,7 @@ public class HtmlReplaceProxyInterceptorFactory implements GatexProxyInterceptor
                 log.debug("state code: {}; content-type: {}", statusCode, contentType);
                 try {
                     if (statusCode == 200 && StringUtils.isNotBlank(contentType)
-                            && (contentType.contains("text/html") || contentType.contains("application/javascript"))) {
+                            && (contentType.contains("text/html") || contentType.contains("text/javascript"))) {
                         for (HtmlReplaceConfigMo replaceConfig : htmlReplaceConfigs) {
                             log.debug("判断是否匹配srcPath: {}", replaceConfig.getSrcPaths());
                             if (ConfigUtils.isMatchSrcPath(proxyContext, replaceConfig.getSrcPaths())) {

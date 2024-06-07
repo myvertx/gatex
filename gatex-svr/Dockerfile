@@ -1,7 +1,7 @@
 ARG VERSION
 
 # 基础镜像
-FROM nnzbz/vertx-app:4.5.7-alpine
+FROM nnzbz/vertx-app:4.5.8-alpine
 # 镜像的作者和邮箱
 LABEL maintainer="nnzbz@163.com"
 # 镜像的版本

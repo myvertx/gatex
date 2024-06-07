@@ -37,6 +37,8 @@ public class RedirectProxyInterceptorFactory implements GatexProxyInterceptorFac
     public ProxyInterceptor create(Vertx vertx, Injector injector, GatexRoute.Dst dst, Object options) {
         Arguments.require(options != null, "并未配置%s的值".formatted(name));
 
+        log.info("{}:{}", name, options);
+
         @SuppressWarnings("unchecked")
         final Map<String, String> redirectConfig              = (Map<String, String>) options;
         String                    locationConfig              = redirectConfig.get("location");

@@ -36,11 +36,11 @@ public class WebVerticle extends AbstractWebVerticle {
     /**
      * 断言器工厂列表
      */
-    private final Map<String, GatexPredicateFactory>        _predicateFactories        = new HashMap<>();
+    private final Map<String, GatexPredicateFactory>        _predicateFactories        = new LinkedHashMap<>();
     /**
      * 代理拦截器工厂列表
      */
-    private final Map<String, GatexProxyInterceptorFactory> _proxyInterceptorFactories = new HashMap<>();
+    private final Map<String, GatexProxyInterceptorFactory> _proxyInterceptorFactories = new LinkedHashMap<>();
 
     /**
      * 根据配置中的路由列表来配置路由
@@ -48,7 +48,13 @@ public class WebVerticle extends AbstractWebVerticle {
      * @param router 路由器
      */
     @Override
-    protected void configRouter(final Router router) {
+    protected void configRouter() {
+        if (router != null && router.getRoutes() != null) {
+            router.getRoutes().clear();
+        }
+        _predicateFactories.clear();
+        _proxyInterceptorFactories.clear();
+
         log.info("注册断言器工厂");
         final ServiceLoader<GatexPredicateFactory> predicaterServiceLoader = ServiceLoader
                 .load(GatexPredicateFactory.class);
