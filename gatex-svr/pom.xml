@@ -275,9 +275,9 @@
                     <execution>
                         <id>default</id>
                         <!-- 绑定到install阶段执行 -->
-                        <phase>install</phase>
+                        <!--                        <phase>install</phase>-->
                         <!-- 不绑定到任何阶段，也就不会执行 -->
-                        <!--                        <phase></phase>-->
+                        <phase></phase>
                         <goals>
                             <goal>build</goal>
                             <goal>push</goal>
@@ -295,6 +295,8 @@
                     <buildArgs>
                         <JAR_FILE>${project.build.finalName}-prod.jar</JAR_FILE>
                         <VERSION>${project.version}</VERSION>
+                        <http_proxy>socks5://127.0.0.1:12345</http_proxy>
+                        <https_proxy>socks5://127.0.0.1:12345</https_proxy>
                     </buildArgs>
                     <verbose>true</verbose>
                     <googleContainerRegistryEnabled>false</googleContainerRegistryEnabled>
