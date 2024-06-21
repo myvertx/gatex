@@ -6,7 +6,7 @@
     <parent>
         <groupId>io.github.myvertx</groupId>
         <artifactId>gatex</artifactId>
-        <version>1.3.31</version>
+        <version>1.3.33</version>
     </parent>
 
     <artifactId>gatex-svr</artifactId>
@@ -197,6 +197,27 @@
 
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.3.0</version>
+                <executions>
+                    <execution>
+                        <id>execute-shell-script</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>sh</executable>
+                            <arguments>
+                                <argument>.cp.sh</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
             <!--            <plugin>-->
             <!--                <artifactId>maven-assembly-plugin</artifactId>-->
             <!--                <configuration>-->
