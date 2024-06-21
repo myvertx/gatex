@@ -1,5 +1,6 @@
 package myvertx.gatex.config;
 
+import java.util.LinkedList;
 import java.util.List;
 
 import lombok.Data;
@@ -16,6 +17,6 @@ public class MainProperties {
     /**
      * 路由列表
      */
-    private List<GatexRoute> routes;
+    private List<GatexRoute> routes = new LinkedList<>();
 
 }

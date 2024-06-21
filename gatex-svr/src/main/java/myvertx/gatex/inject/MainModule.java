@@ -13,7 +13,8 @@ public class MainModule extends AbstractModule {
     @Singleton
     @Provides
     public MainProperties getMainProperties(@Named("config") final JsonObject config) {
-        return config.getJsonObject("main").mapTo(MainProperties.class);
+        JsonObject main = config.getJsonObject("main");
+        return main == null ? new MainProperties() : main.mapTo(MainProperties.class);
     }
 
 }
