@@ -19,27 +19,8 @@
         <maven.compiler.target>${java.version}</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-        <wheel.version>3.5.37</wheel.version>
+        <wheel.version>3.5.38</wheel.version>
     </properties>
-
-    <url>https://github.com/myvertx/gatex</url>
-    <developers>
-        <developer>
-            <name>zbz</name>
-            <email>nnzbz@qq.com</email>
-        </developer>
-    </developers>
-    <licenses>
-        <license>
-            <name>MIT License</name>
-            <url>https://www.opensource.org/licenses/mit-license.php</url>
-        </license>
-    </licenses>
-    <scm>
-        <connection>scm:git:https://github.com/myvertx/gatex</connection>
-        <developerConnection>scm:git:https://github.com/myvertx/gatex.git</developerConnection>
-        <url>https://github.com/myvertx/gatex.git</url>
-    </scm>
 
     <dependencyManagement>
         <dependencies>
@@ -63,6 +44,25 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
+
+    <url>https://github.com/myvertx/gatex</url>
+    <developers>
+        <developer>
+            <name>zbz</name>
+            <email>nnzbz@qq.com</email>
+        </developer>
+    </developers>
+    <licenses>
+        <license>
+            <name>MIT License</name>
+            <url>https://www.opensource.org/licenses/mit-license.php</url>
+        </license>
+    </licenses>
+    <scm>
+        <connection>scm:git:https://github.com/myvertx/gatex</connection>
+        <developerConnection>scm:git:https://github.com/myvertx/gatex.git</developerConnection>
+        <url>https://github.com/myvertx/gatex.git</url>
+    </scm>
 
     <!--    <build>-->
     <!--        <plugins>-->

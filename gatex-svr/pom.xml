@@ -309,9 +309,9 @@
                     <!-- 此选项指定在settings.xml文件中设置的server -->
                     <useMavenSettingsForAuth>true</useMavenSettingsForAuth>
                     <!-- 部署到私服，${my-docker.host}在settings.xml中统一配置 -->
-                    <!-- <repository>${my-docker.host}/${docker.image.prefix}/${project.artifactId}</repository> -->
+                    <repository>${my-docker.host}/${docker.image.prefix}/${project.artifactId}</repository>
                     <!-- 部署到hub.docker.com -->
-                    <repository>${docker.image.prefix}/${project.artifactId}</repository>
+                    <!--                    <repository>${docker.image.prefix}/${project.artifactId}</repository>-->
                     <tag>${project.version}</tag>
                     <buildArgs>
                         <JAR_FILE>${project.build.finalName}-prod.jar</JAR_FILE>
