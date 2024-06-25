@@ -33,6 +33,10 @@
             <artifactId>wheel-vertx</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.github.rebue.wheel</groupId>
+            <artifactId>wheel-turing</artifactId>
+        </dependency>
+        <dependency>
             <groupId>io.github.myvertx</groupId>
             <artifactId>gatex-api</artifactId>
         </dependency>
