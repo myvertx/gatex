@@ -44,8 +44,6 @@ public class WebVerticle extends AbstractWebVerticle {
 
     /**
      * 根据配置中的路由列表来配置路由
-     *
-     * @param router 路由器
      */
     @Override
     protected void configRouter() {
@@ -140,7 +138,6 @@ public class WebVerticle extends AbstractWebVerticle {
         log.info("配置静态资源类的路由");
         log.info("遍历当前循环的路由列表中的每一个路由，并添加静态处理器");
         routes.forEach(route -> {
-            log.info("给路由添加断言处理器");
             addPredicateHandler(route, dst.getPredicates());
 
             log.info("设置静态根目录");
@@ -201,7 +198,6 @@ public class WebVerticle extends AbstractWebVerticle {
         log.info("遍历当前循环的路由列表中的每一个路由，并添加代理处理器");
         routes.forEach(route -> {
             log.debug("路由: {}", route.getPath());
-            log.info("给路由添加断言处理器");
             addPredicateHandler(route, dst.getPredicates());
             log.info("给路由添加代理处理器");
             route.handler(proxyHandler);
@@ -240,6 +236,7 @@ public class WebVerticle extends AbstractWebVerticle {
      * @param predicates 断言列表
      */
     private void addPredicateHandler(final Route route, final Map<String, Object> predicates) {
+        log.info("给路由添加断言处理器");
         if (predicates == null || predicates.isEmpty()) {
             return;
         }
@@ -250,17 +247,17 @@ public class WebVerticle extends AbstractWebVerticle {
                 final GatexPredicateFactory factory = this._predicateFactories.get(key);
                 Arguments.require(factory != null, "找不到名为" + key + "的断言工厂");
                 log.info("使用{}断言工厂创建断言", key);
-                final GatexPredicate predicater = factory.create(this.vertx, value);
+                final GatexPredicate predicate = factory.create(this.vertx, value);
                 route.handler(ctx -> {
                     log.debug("进入{}断言器判断", factory.name());
-                    if (predicater.test(ctx)) {
+                    if (predicate.test(ctx)) {
                         ctx.next();
                     } else {
                         ctx.end();
                     }
                 });
             } catch (Exception e) {
-                log.error("添加" + key + "断言器异常", e);
+                log.error("添加{}断言器异常", key, e);
                 if (mainProperties.getStrict())
                     throw e;
             }
@@ -287,7 +284,7 @@ public class WebVerticle extends AbstractWebVerticle {
                 ProxyInterceptor proxyInterceptor = factory.create(this.vertx, this.injector, dst, value);
                 httpProxy.addInterceptor(proxyInterceptor);
             } catch (Exception e) {
-                log.error("添加" + key + "代理拦截器异常", e);
+                log.error("添加{}代理拦截器异常", key, e);
                 if (mainProperties.getStrict())
                     throw e;
             }
