@@ -65,11 +65,11 @@ public class GatexRoute {
         /**
          * 静态网站的HistoryMode(Hash/Html5/Memory)，默认为Hash
          */
-        private String              historyMode = "Hash";
+        private String              history = "Hash";
         /**
          * 是否SSL加密
          */
-        private Boolean             isSsl       = false;
+        private Boolean             isSsl   = false;
         /**
          * 代理发出请求的选项
          */
@@ -86,7 +86,7 @@ public class GatexRoute {
         /**
          * 过滤器
          */
-        private Map<String, Object> filters     = new LinkedHashMap<>();
+        private Map<String, Object> filters = new LinkedHashMap<>();
 
     }
 
