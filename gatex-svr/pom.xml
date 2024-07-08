@@ -22,12 +22,12 @@
 
     <dependencies>
         <!-- TODO 临时添加测试，测试完后删除 -->
-        <!--        <dependency>-->
-        <!--            <groupId>rebue.adm</groupId>-->
-        <!--            <artifactId>adm-gatex-plugin</artifactId>-->
-        <!--            <version>1.0.0</version>-->
-        <!--            <scope>provided</scope>-->
-        <!--        </dependency>-->
+        <dependency>
+            <groupId>rebue.adm</groupId>
+            <artifactId>adm-gatex-plugin</artifactId>
+            <version>1.0.0</version>
+            <scope>provided</scope>
+        </dependency>
 
         <!-- 此包中有与vertx重名重路径的类，所以放在最前 -->
         <dependency>
@@ -260,6 +260,20 @@
                             <goal>shade</goal>
                         </goals>
                         <configuration>
+                            <!-- 过滤器排除配置文件-->
+                            <filters>
+                                <filter>
+                                    <artifact>*:*</artifact>
+                                    <excludes>
+                                        <exclude>logback.xml</exclude>
+                                        <exclude>config/</exclude>
+                                        <!-- 不打包下面的文件，否则运行时会报错Error: A JNI error has occurred, please check your installation and try again -->
+                                        <exclude>META-INF/*.SF</exclude>
+                                        <exclude>META-INF/*.DSA</exclude>
+                                        <exclude>META-INF/*.RSA</exclude>
+                                    </excludes>
+                                </filter>
+                            </filters>
                             <transformers>
                                 <transformer
                                         implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
