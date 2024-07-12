@@ -27,6 +27,7 @@ import myvertx.gatex.api.GatexRoute;
 import myvertx.gatex.api.GatexRoute.Dst;
 import myvertx.gatex.config.MainProperties;
 import rebue.wheel.vertx.verticle.AbstractWebVerticle;
+import rebue.wheel.vertx.web.HistoryHtml5Handler;
 
 @Slf4j
 public class WebVerticle extends AbstractWebVerticle {
@@ -144,9 +145,11 @@ public class WebVerticle extends AbstractWebVerticle {
             final String staticRootDirectory = "webroot" + route.getPath();
             log.info("静态根目录: {}", staticRootDirectory);
             route.handler(StaticHandler.create(staticRootDirectory));
+
             // 如果静态网站是Html5的HistoryMode，需要添加专门的处理器
             if ("Html5".equalsIgnoreCase(dst.getHistory())) {
-                route.handler(ctx -> ctx.response().sendFile(staticRootDirectory + "index.html"));
+                route.failureHandler(new HistoryHtml5Handler(route.getPath()));
+                // route.handler(ctx -> ctx.response().sendFile(staticRootDirectory + "index.html"));
             }
         });
     }

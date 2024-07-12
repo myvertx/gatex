@@ -1,5 +1,6 @@
 package myvertx.gatex.plugin;
 
+import java.nio.charset.StandardCharsets;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -9,6 +10,7 @@ import org.apache.commons.lang3.StringUtils;
 import com.google.inject.Injector;
 
 import io.vertx.core.Future;
+import io.vertx.core.MultiMap;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpHeaders;
@@ -84,13 +86,16 @@ public class HtmlReplaceProxyInterceptorFactory implements GatexProxyInterceptor
             @Override
             public Future<Void> handleProxyResponse(final ProxyContext proxyContext) {
                 log.debug("{}.handleProxyResponse: {}", name, proxyContext);
-                final ProxyResponse proxyResponse = proxyContext.response();
-                final int           statusCode    = proxyResponse.getStatusCode();
-                final String        contentType   = proxyResponse.headers().get(HttpHeaders.CONTENT_TYPE);
-                log.debug("state code: {}; content-type: {}", statusCode, contentType);
+                // final ProxyRequest proxyRequest = proxyContext.request();
+                final ProxyResponse proxyResponse       = proxyContext.response();
+                final int           statusCode          = proxyResponse.getStatusCode();
+                // String requestAcceptEncoding = proxyRequest.headers().get(HttpHeaders.ACCEPT_ENCODING);
+                MultiMap            responseHeaders     = proxyResponse.headers();
+                final String        responseContentType = responseHeaders.get(HttpHeaders.CONTENT_TYPE);
+                log.debug("state code: {}; content-type: {}", statusCode, responseContentType);
                 try {
-                    if (statusCode == 200 && StringUtils.isNotBlank(contentType)
-                            && (contentType.contains("text/html") || contentType.contains("text/javascript"))) {
+                    if (statusCode == 200 && StringUtils.isNotBlank(responseContentType)
+                            && (responseContentType.contains("text/html") || responseContentType.contains("text/javascript"))) {
                         for (HtmlReplaceConfigMo replaceConfig : htmlReplaceConfigs) {
                             log.debug("判断是否匹配srcPath: {}", replaceConfig.getSrcPaths());
                             if (ConfigUtils.isMatchSrcPath(proxyContext, replaceConfig.getSrcPaths())) {
@@ -107,8 +112,14 @@ public class HtmlReplaceProxyInterceptorFactory implements GatexProxyInterceptor
                                                 regexReplacementMo.getReplacement());
                                     }
 
+                                    // byte[] buf = (requestAcceptEncoding != null && requestAcceptEncoding.contains("gzip"))
+                                    // ? GzipHelper.compress(content)
+                                    // : content.getBytes(StandardCharsets.UTF_8);
+
+                                    byte[] buf = content.getBytes(StandardCharsets.UTF_8);
+
                                     // 重新设置body
-                                    proxyResponse.setBody(Body.body(Buffer.buffer(content)));
+                                    proxyResponse.setBody(Body.body(Buffer.buffer(buf)));
                                     return proxyContext.sendResponse();
                                 }).recover(err -> {
                                     final String msg = "解析响应的body失败";
