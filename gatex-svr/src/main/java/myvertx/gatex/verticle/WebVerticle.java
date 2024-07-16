@@ -27,7 +27,6 @@ import myvertx.gatex.api.GatexRoute;
 import myvertx.gatex.api.GatexRoute.Dst;
 import myvertx.gatex.config.MainProperties;
 import rebue.wheel.vertx.verticle.AbstractWebVerticle;
-import rebue.wheel.vertx.web.HistoryHtml5Handler;
 
 @Slf4j
 public class WebVerticle extends AbstractWebVerticle {
@@ -148,8 +147,8 @@ public class WebVerticle extends AbstractWebVerticle {
 
             // 如果静态网站是Html5的HistoryMode，需要添加专门的处理器
             if ("Html5".equalsIgnoreCase(dst.getHistory())) {
-                route.failureHandler(new HistoryHtml5Handler(route.getPath()));
-                // route.handler(ctx -> ctx.response().sendFile(staticRootDirectory + "index.html"));
+                // route.failureHandler(new HistoryHtml5Handler(route.getPath()));
+                route.handler(ctx -> ctx.response().sendFile(staticRootDirectory + "index.html"));
             }
         });
     }
@@ -193,7 +192,7 @@ public class WebVerticle extends AbstractWebVerticle {
         }
         addProxyInterceptors(httpProxy, dst);
         log.info("创建代理处理器");
-        final ProxyHandler proxyHandler = new ProxyHandlerImpl(httpProxy);
+        final ProxyHandler proxyHandler = ProxyHandler.create(httpProxy);
 
         log.debug("设置httpProxy的请求处理器");
         httpProxy.originRequestProvider((req, client) -> client.request(requestOptions));
