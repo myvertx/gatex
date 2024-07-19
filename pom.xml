@@ -25,6 +25,14 @@
     <dependencyManagement>
         <dependencies>
             <dependency>
+                <groupId>com.github.rebue.wheel</groupId>
+                <artifactId>wheel</artifactId>
+                <version>${wheel.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+            <dependency>
                 <groupId>io.github.myvertx</groupId>
                 <artifactId>gatex-api</artifactId>
                 <version>${project.version}</version>
@@ -33,14 +41,6 @@
                 <groupId>io.github.myvertx</groupId>
                 <artifactId>gatex-util</artifactId>
                 <version>${project.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>com.github.rebue.wheel</groupId>
-                <artifactId>wheel</artifactId>
-                <version>${wheel.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
             </dependency>
         </dependencies>
     </dependencyManagement>

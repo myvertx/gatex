@@ -22,12 +22,12 @@
 
     <dependencies>
         <!-- TODO 临时添加测试，测试完后删除 -->
-        <dependency>
-            <groupId>rebue.adm</groupId>
-            <artifactId>adm-gatex-plugin</artifactId>
-            <version>1.0.0</version>
-            <scope>provided</scope>
-        </dependency>
+        <!--        <dependency>-->
+        <!--            <groupId>rebue.adm</groupId>-->
+        <!--            <artifactId>adm-gatex-plugin</artifactId>-->
+        <!--            <version>1.0.0</version>-->
+        <!--            <scope>provided</scope>-->
+        <!--        </dependency>-->
 
         <!-- 此包中有与vertx重名重路径的类，所以放在最前 -->
         <dependency>
@@ -140,6 +140,16 @@
         <dependency>
             <groupId>org.apache.curator</groupId>
             <artifactId>curator-recipes</artifactId>
+            <exclusions>
+                <exclusion>
+                    <artifactId>logback-classic</artifactId>
+                    <groupId>ch.qos.logback</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>logback-core</artifactId>
+                    <groupId>ch.qos.logback</groupId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <dependency>
@@ -152,6 +162,7 @@
             <artifactId>commons-lang3</artifactId>
         </dependency>
 
+        <!-- Slf4j -->
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
@@ -164,15 +175,47 @@
             <groupId>org.slf4j</groupId>
             <artifactId>jcl-over-slf4j</artifactId>
         </dependency>
+
+        <!-- log4j2 -->
         <dependency>
-            <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-classic</artifactId>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-api</artifactId>
+            <version>2.23.1</version>
         </dependency>
-        <!-- logback配置使用if需要 -->
         <dependency>
-            <groupId>org.codehaus.janino</groupId>
-            <artifactId>janino</artifactId>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-core</artifactId>
+            <version>2.23.1</version>
         </dependency>
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-slf4j2-impl</artifactId>
+            <version>2.23.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-jul</artifactId>
+            <version>2.23.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-jcl</artifactId>
+            <version>2.23.1</version>
+        </dependency>
+        <!-- log4j2配置使用异步日志需要 -->
+        <dependency>
+            <groupId>com.lmax</groupId>
+            <artifactId>disruptor</artifactId>
+        </dependency>
+        <!--        <dependency>-->
+        <!--            <groupId>ch.qos.logback</groupId>-->
+        <!--            <artifactId>logback-classic</artifactId>-->
+        <!--        </dependency>-->
+        <!--        &lt;!&ndash; logback配置使用if需要 &ndash;&gt;-->
+        <!--        <dependency>-->
+        <!--            <groupId>org.codehaus.janino</groupId>-->
+        <!--            <artifactId>janino</artifactId>-->
+        <!--        </dependency>-->
 
         <!-- 代码生成 -->
         <!-- lombok的依赖必须在最前面，否则其它生成器在没有lombok生成代码时，有可能会失效 -->
