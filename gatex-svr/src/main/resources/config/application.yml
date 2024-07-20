@@ -14,117 +14,120 @@ main:
           pathPrefixReplace: /ttyd
           redirect:
             locationPrefix: /ttyd
+    # Consul
     - src:
-        path: /captcha/*
+        path: /consul/*
       dst:
-        host: 127.0.0.1
-        port: 9000
-        client:
-          logActivity: true
-    - src:
-        regexPath: ^/b02/.*
-      dst:
-        host: 127.0.0.1
-        port: 9202
-        client:
-          logActivity: true
-    - src:
-        regexPath: ^/c02/.*
-      dst:
-        host: 127.0.0.1
-        port: 9302
-        client:
-          logActivity: true
-    - src:
-        path: /bank/api/v1/payCallback
-      dst:
-        host: 127.0.0.1
-        port: 8090
-        client:
-          logActivity: true
-    - src:
-        regexPath: /bank/api/v1/payCode/query
-      dst:
-        host: 127.0.0.1
-        port: 8090
-        client:
-          logActivity: true
-    - src:
-        regexPath: ^/bank/api/v2/.*
-      dst:
-        host: 127.0.0.1
-        port: 9302
-        client:
-          logActivity: true
-    - src:
-        path: /pay/api/v1/*
-      dst:
-        host: 127.0.0.1
-        port: 9302
-        client:
-          logActivity: true
-      predicates:
-        pathExclude:
-          - ^/pay/api/v1/pay
-    - src:
-        path: /pay/api/v1/pay
-      dst:
-        host: 127.0.0.1
-        port: 9302
-        client:
-          logActivity: true
-    - src:
-        path: /redisweb/*
-      dst:
-        host: 127.0.0.1
-        port: 15080
-        client:
-          logActivity: true
-        proxyInterceptors:
-          htmlBase: /redisweb
-    - src:
-        path: /turtest/*
-      dst:
-        host: 127.0.0.1
-        port: 9000
-        client:
-          logActivity: true
-    - src:
-        path: /pay-platform/*
-      dst:
-        host: static
-    - src:
-        path: /b03-web/*
-      dst:
-        host: static
-    - src:
-        path: /b03/*
-      dst:
-        host: 127.0.0.1
-        port: 9203
-        client:
-          logActivity: true
+        host: consul
+        port: 8500
+        pathPrefixReplace: /consul
         filters:
-          htmlBase: /pulsar-manager
+          redirect:
+            locationPrefix: /consul
           htmlReplace:
-            - href=/:href=/pulsar-manager/
-            - src=/:src=/pulsar-manager/
-            - '"static/js":"pulsar-manager/static/js"'
-            - '"static/css":"pulsar-manager/static/css"'
+            - '"/ui/:"/consul/ui/'
+            - '/v1/:/consul/v1/'
+    # Kibana
+    - src:
+        path: /kibana/*
+      dst:
+        host: zlby-dev
+        port: 40185
+        pathPrefixReplace: /kibana
+        filters:
+          redirect:
+            locationPrefix: /kibana
+          htmlReplace:
+            - srcPath: ^/login
+              replacement:
+                - 'href="/:href="/kibana/'
+                - 'src="/:src="/kibana/'
+                - "url\\('/:url\\('/kibana/"
+                - '/translations/en.json:/kibana/translations/en.json'
+                - '&quot;/50d89958910a:&quot;/kibana/50d89958910a'
+            - srcPath: bootstrap-anonymous.js$
+              replacement:
+                - '/50d89958910a:/kibana/50d89958910a'
+            - srcPath: security.plugin.js$
+              replacement:
+                - '/internal/security/me:/kibana/internal/security/me'
+            - srcPath: core.entry.js$
+              replacement:
+                - '/api/core/capabilities:/kibana/api/core/capabilities'
+    # 中控
+    - src:
+        path: /so/*
+      dst:
+        host: 192.168.53.11
+        port: 8080
+        pathPrefixReplace: /so
+        filters:
+          redirect:
+            locationPrefix: /so
+          htmlBase: /so
+          htmlReplace:
+            - srcPath: ^/$
+              replacement:
+                - '"/login:"/so/login'
+                - '"/inter-api:"/so/inter-api'
+            - srcPath: index_6041d837d0004d9f6129.js$
+              replacement:
+                - '"/inter-api:"/so/inter-api'
+                - '"/api:"/so/api'
+            - srcPath: ^/login/$
+              replacement:
+                - '"/login:"/so/login'
+            - srcPath: index_7dac2c75bf4708f4b130.js$
+              replacement:
+#                - '"/login:"/so/login'
+                - '"/inter-api:"/so/inter-api'
+                - '"/api:"/so/api'
+            - srcPath: global_setting_loginImages$
+              replacement:
+                - '"/api:"/so/api'
+                - '"/systemconfig:"/so/systemconfig'
+    # 中控
+    - src:
+        path:
+          - /login/*
+          - /inter-api/*
+#          - /api/config/download/*
+#          - /systemconfig/*
+      dst:
+        host: 192.168.53.11
+        port: 8080
+
+jwt:
+  keyStore:
+    # keytool -genkeypair -keystore keystore.pfx -storepass xxxxxxxx -keyalg EC -groupname secp521r1 -alias ES512 -keypass xxxxxxxx -sigalg SHA512withECDSA -dname "CN=,OU=,O=,L=,ST=,C=" -validity 360
+    type: PKCS12
+    path: config/keystore.pfx
+    password: xxxxxxxx
+  jwtOptions:
+    # JWT签名算法
+    algorithm: ES512
+    # 签发者
+    issuer: zbz
+    # 超时时间(单位秒)
+    expires: 1800
+
 web:
   config:
+    globalRouteHandlers:
+      auth:
+        admSvrHost: gateway_svr
+        admSvrPort: 19090
+    # 是否打印服务器监听日志
     isLogging: true
-    isResponseTime: true
+    # 跨域
     isCors: true
-    http2https:
-      port: 8092
     server:
-      port: 8090
+      port: 19080
       logActivity: true
       perMessageWebSocketCompressionSupported: false
-kafkaConsumer:
-  config:
-    bootstrap.servers: 'localhost:9092'
-    key.serializer: org.apache.kafka.common.serialization.StringSerializer
-    value.serializer: org.apache.kafka.common.serialization.StringSerializer
-    acks: '1'
+      compressors:
+        - gzip
+        - brotli
+        - deflate
+        - snappy
+        - zstd

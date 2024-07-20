@@ -9,8 +9,8 @@ import org.apache.commons.lang3.StringUtils;
 import com.google.inject.Injector;
 
 import io.vertx.core.Future;
+import io.vertx.core.MultiMap;
 import io.vertx.core.Vertx;
-import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.impl.Arguments;
 import io.vertx.httpproxy.Body;
@@ -22,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 import myvertx.gatex.api.GatexProxyInterceptorFactory;
 import myvertx.gatex.api.GatexRoute;
 import myvertx.gatex.mo.SrcPathMo;
+import rebue.wheel.vertx.util.BodyUtils;
 import myvertx.gatex.util.ConfigUtils;
 import rebue.wheel.core.UriUtils;
 
@@ -55,7 +56,7 @@ public class HtmlBaseProxyInterceptorFactory implements GatexProxyInterceptorFac
             Map<String, Object> optionsMap = (Map<String, Object>) options;
             baseHrefTemp = (String) optionsMap.get("baseHref");
             Arguments.require(StringUtils.isNotBlank(baseHrefTemp), "并未配置%s的baseHref".formatted(name));
-            srcPaths.addAll(ConfigUtils.readSrcPath(name, optionsMap));
+            srcPaths.addAll(ConfigUtils.readSrcPath(optionsMap, name));
         }
 
         // 填补结束的斜杠
@@ -64,32 +65,38 @@ public class HtmlBaseProxyInterceptorFactory implements GatexProxyInterceptorFac
         return new ProxyInterceptor() {
             @Override
             public Future<Void> handleProxyResponse(final ProxyContext proxyContext) {
-                log.debug("htmlBase.handleProxyResponse: {}", proxyContext);
-                final ProxyResponse proxyResponse = proxyContext.response();
-                final int           statusCode    = proxyResponse.getStatusCode();
-                final String        contentType   = proxyResponse.headers().get(HttpHeaders.CONTENT_TYPE);
-                log.debug("state code: {}; content-type: {}", statusCode, contentType);
-                try {
-                    if (statusCode == 200 && StringUtils.isNotBlank(contentType) && contentType.contains("text/html")) {
-                        if (ConfigUtils.isMatchSrcPath(proxyContext, srcPaths)) {
-                            final Body                 body   = proxyResponse.getBody();
-                            final BufferingWriteStream buffer = new BufferingWriteStream();
-                            return body.stream().pipeTo(buffer).compose(v -> {
-                                String content = buffer.content().toString();
-                                content = content.replaceAll("<head>", "<head><base href=\"" + baseHref + "\">");
-                                // 重新设置body
-                                proxyResponse.setBody(Body.body(Buffer.buffer(content)));
-                                return proxyContext.sendResponse();
-                            }).recover(err -> {
-                                final String msg = "解析响应的body失败";
-                                log.error(msg, err);
-                                return proxyContext.sendResponse();
-                            });
-                        }
-                    }
-                } catch (Exception e) {
-                    log.error("未知错误", e);
-                    proxyResponse.setStatusCode(500);
+                log.debug("{}.handleProxyResponse: {}", name, proxyContext);
+                String              uri                 = proxyContext.request().getURI();
+                final ProxyResponse proxyResponse       = proxyContext.response();
+                final int           statusCode          = proxyResponse.getStatusCode();
+                MultiMap            responseHeaders     = proxyResponse.headers();
+                final String        responseContentType = responseHeaders.get(HttpHeaders.CONTENT_TYPE);
+                final String        contentEncoding     = responseHeaders.get(HttpHeaders.CONTENT_ENCODING);
+                log.debug("state code: {}; content-type: {}", statusCode, responseContentType);
+                if (statusCode != 200 || StringUtils.isBlank(responseContentType) || !responseContentType.contains("text/html")) {
+                    return proxyContext.sendResponse();
+                }
+                if (ConfigUtils.isMatchSrcPath(uri, srcPaths)) {
+                    final Body                 body                 = proxyResponse.getBody();
+                    final BufferingWriteStream bufferingWriteStream = new BufferingWriteStream();
+                    return body.stream().pipeTo(bufferingWriteStream).compose(v -> {
+                        log.debug("{}解析响应的body成功", name);
+                        log.debug("contentEncoding: {}", contentEncoding);
+
+                        // 获取Body内容
+                        String content = BodyUtils.getContent(contentEncoding, bufferingWriteStream.content());
+
+                        // 修改内容
+                        content = content.replaceAll("<head>", "<head><base href=\"" + baseHref + "\">");
+
+                        // 重新设置body
+                        proxyResponse.setBody(BodyUtils.newBody(contentEncoding, content));
+                        return proxyContext.sendResponse();
+                    }).recover(err -> {
+                        final String msg = "解析响应的body失败";
+                        log.error(msg, err);
+                        return proxyContext.sendResponse();
+                    });
                 }
                 return proxyContext.sendResponse();
             }

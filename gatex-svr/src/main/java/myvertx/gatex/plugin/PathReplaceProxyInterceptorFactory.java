@@ -53,7 +53,7 @@ public class PathReplaceProxyInterceptorFactory implements GatexProxyInterceptor
         return new ProxyInterceptor() {
             @Override
             public void modifyProxyRequest(ProxyRequest proxyRequest) {
-                log.debug("pathReplace.modifyProxyRequest 替换请求的链接: {}", replacePath);
+                log.debug("{}.modifyProxyRequest 替换请求的链接: {}", name, replacePath);
                 String uri = proxyRequest.getURI();
                 uri = StringUtils.isBlank(regex) ? replacement : uri.replaceAll(regex, replacement);
                 proxyRequest.setURI(uri);

@@ -44,12 +44,12 @@ public class ProxyInterceptorUtils {
             ParsedBodyHandler parsedBodyHandler) {
         log.debug("handleProxyRequest");
 
-        final ProxyRequest         request = proxyContext.request();
-        final Body                 body    = request.getBody();
-        final BufferingWriteStream buffer  = new BufferingWriteStream();
+        final ProxyRequest         request              = proxyContext.request();
+        final Body                 body                 = request.getBody();
+        final BufferingWriteStream bufferingWriteStream = new BufferingWriteStream();
         log.debug("准备读取请求的body");
-        return body.stream().pipeTo(buffer).compose(v -> {
-            final String sBody = buffer.content().toString();
+        return body.stream().pipeTo(bufferingWriteStream).compose(v -> {
+            final String sBody = bufferingWriteStream.content().toString();
             log.debug("body: {}", sBody);
             if (parsedBodyHandler != null) {
                 parsedBodyHandler.handle(proxyContext, sBody);
@@ -157,67 +157,66 @@ public class ProxyInterceptorUtils {
                 if (statusCode != 200) {
                     return proxyContext.sendResponse();
                 }
-                final Body                 body   = proxyResponse.getBody();
-                final BufferingWriteStream buffer = new BufferingWriteStream();
+                final Body                 body                 = proxyResponse.getBody();
+                final BufferingWriteStream bufferingWriteStream = new BufferingWriteStream();
                 log.debug("准备读取响应的body");
-                return body.stream().pipeTo(buffer)
-                        .compose(v -> {
-                            // 读取缓存中请求的原始body
-                            String sRequestBody = proxyContext.get("originRequestBody", String.class);
-                            log.debug("request body: {}", sRequestBody);
-                            final String sResponseBody = buffer.content().toString();
-                            log.debug("response body: {}", sResponseBody);
+                return body.stream().pipeTo(bufferingWriteStream).compose(v -> {
+                    // 读取缓存中请求的原始body
+                    String sRequestBody = proxyContext.get("originRequestBody", String.class);
+                    log.debug("request body: {}", sRequestBody);
+                    final String sResponseBody = bufferingWriteStream.content().toString();
+                    log.debug("response body: {}", sResponseBody);
 
-                            // 判断第一个接口是否不能处理
-                            if (rerouteHandler.isReroute(sRequestBody, sResponseBody)) {
-                                log.debug("调用第一个接口结果不能返回，需要转向调用第二个接口");
-                                RequestFact requestFact = RequestFact.builder()
-                                        .method(StringUtils.isNotBlank(rerouteMethod) ? rerouteMethod
-                                                : proxyRequest.getMethod().name())
-                                        .host(rerouteHost)
-                                        .port(reroutePort)
-                                        .uri(rerouteUri)
-                                        .body(new JsonObject(sRequestBody))
-                                        .build();
-                                return rerouteHandler.setRequestOfReroute(requestFact)
-                                        .compose(newRequestFact -> {
-                                            log.debug("ctx.reroute: {}", newRequestFact);
-                                            return webClient
-                                                    .request(HttpMethod.valueOf(newRequestFact.getMethod()),
-                                                            newRequestFact.getPort(), newRequestFact.getHost(),
-                                                            newRequestFact.getUri())
-                                                    .sendJsonObject(newRequestFact.getBody())
-                                                    .compose(bufferHttpResponse -> {
-                                                        // 重新设置body
-                                                        proxyResponse
-                                                                .setStatusCode(200)
-                                                                .putHeader("Content-Type", "application/json")
-                                                                .setBody(Body.body(bufferHttpResponse.body()));
-                                                        return proxyContext.sendResponse();
-                                                    }).recover(err -> {
-                                                        final String msg = "转向调用第二个接口失败";
-                                                        log.error(msg, err);
-                                                        proxyResponse.setStatusCode(500);
-                                                        return proxyContext.sendResponse();
-                                                    });
-                                        }).recover(err -> {
-                                            final String msg = "获取重新路由的请求body失败";
-                                            log.error(msg, err);
-                                            proxyResponse.setStatusCode(500);
-                                            return proxyContext.sendResponse();
-                                        });
-                            }
+                    // 判断第一个接口是否不能处理
+                    if (rerouteHandler.isReroute(sRequestBody, sResponseBody)) {
+                        log.debug("调用第一个接口结果不能返回，需要转向调用第二个接口");
+                        RequestFact requestFact = RequestFact.builder()
+                                .method(StringUtils.isNotBlank(rerouteMethod) ? rerouteMethod
+                                        : proxyRequest.getMethod().name())
+                                .host(rerouteHost)
+                                .port(reroutePort)
+                                .uri(rerouteUri)
+                                .body(new JsonObject(sRequestBody))
+                                .build();
+                        return rerouteHandler.setRequestOfReroute(requestFact)
+                                .compose(newRequestFact -> {
+                                    log.debug("ctx.reroute: {}", newRequestFact);
+                                    return webClient
+                                            .request(HttpMethod.valueOf(newRequestFact.getMethod()),
+                                                    newRequestFact.getPort(), newRequestFact.getHost(),
+                                                    newRequestFact.getUri())
+                                            .sendJsonObject(newRequestFact.getBody())
+                                            .compose(bufferHttpResponse -> {
+                                                // 重新设置body
+                                                proxyResponse
+                                                        .setStatusCode(200)
+                                                        .putHeader("Content-Type", "application/json")
+                                                        .setBody(Body.body(bufferHttpResponse.body()));
+                                                return proxyContext.sendResponse();
+                                            }).recover(err -> {
+                                                final String msg = "转向调用第二个接口失败";
+                                                log.error(msg, err);
+                                                proxyResponse.setStatusCode(500);
+                                                return proxyContext.sendResponse();
+                                            });
+                                }).recover(err -> {
+                                    final String msg = "获取重新路由的请求body失败";
+                                    log.error(msg, err);
+                                    proxyResponse.setStatusCode(500);
+                                    return proxyContext.sendResponse();
+                                });
+                    }
 
-                            // 重新设置body
-                            proxyResponse.setBody(Body.body(Buffer.buffer(sResponseBody)));
-                            // 继续拦截器
-                            return proxyContext.sendResponse();
-                        }).recover(err -> {
-                            final String msg = "解析响应的body失败";
-                            log.error(msg, err);
-                            proxyResponse.setStatusCode(500);
-                            return Future.succeededFuture();
-                        });
+                    // 重新设置body
+                    proxyResponse.setBody(Body.body(Buffer.buffer(sResponseBody)));
+                    // 继续拦截器
+                    return proxyContext.sendResponse();
+                }).recover(err -> {
+                    final String msg = "解析响应的body失败";
+                    log.error(msg, err);
+                    proxyResponse.setStatusCode(500);
+                    return Future.succeededFuture();
+                });
             }
         };
     }

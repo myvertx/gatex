@@ -11,7 +11,6 @@ import org.apache.commons.lang3.StringUtils;
 import com.google.common.base.Splitter;
 
 import io.vertx.core.impl.Arguments;
-import io.vertx.httpproxy.ProxyContext;
 import lombok.extern.slf4j.Slf4j;
 import myvertx.gatex.mo.RegexReplacementMo;
 import myvertx.gatex.mo.SrcPathMo;
@@ -25,35 +24,28 @@ public class ConfigUtils {
      * @param srcPaths     srcPath列表
      * @return 是否匹配
      */
-    public static boolean isMatchSrcPath(ProxyContext proxyContext, List<SrcPathMo> srcPaths) {
-        boolean isMatch = false;
+    public static boolean isMatchSrcPath(String uri, List<SrcPathMo> srcPaths) {
         if (srcPaths == null || srcPaths.isEmpty()) {
-            isMatch = true;
+            return true;
         } else {
-            String method = proxyContext.request().getMethod().name();
-            String uri    = proxyContext.request().getURI();
-            log.debug("判断{}:{}是否匹配srcPath", method, uri);
             for (SrcPathMo srcPath : srcPaths) {
-                if (StringUtils.isNotBlank(srcPath.getMethod()) && !srcPath.getMethod().equalsIgnoreCase(method)) {
-                    continue;
-                }
+                log.debug("判断{}是否匹配{}", uri, srcPath);
                 if (srcPath.getRegexPath().matcher(uri).find()) {
-                    isMatch = true;
-                    break;
+                    return true;
                 }
             }
         }
-        return isMatch;
+        return false;
     }
 
     /**
      * 读取srcPath的配置
      *
-     * @param pluginName 插件名称
      * @param optionsMap Map类型的选项配置
-     * @return srcPaths
+     * @param pluginName 插件名称(用于出错时反馈)
+     * @return 源路径列表
      */
-    public static List<SrcPathMo> readSrcPath(String pluginName, Map<?, ?> optionsMap) {
+    public static List<SrcPathMo> readSrcPath(Map<?, ?> optionsMap, String pluginName) {
         List<SrcPathMo> result     = new LinkedList<>();
         Object          srcPathObj = optionsMap.get("srcPath");
         if (srcPathObj instanceof String srcPathStr) {
@@ -84,7 +76,14 @@ public class ConfigUtils {
         srcPathMoList.add(srcPathMo);
     }
 
-    public static RegexReplacementMo readReplacement(String pluginName, String regexReplacement) {
+    /**
+     * 从字符串中解析出替换信息
+     * 
+     * @param regexReplacement 要解析的字符串
+     * @param pluginName       插件名称(用于出错时反馈)
+     * @return 替换信息
+     */
+    public static RegexReplacementMo parseReplacement(String regexReplacement, String pluginName) {
         // 默认":"为分隔符
         char separator = ':';
         // 如果":"不是有且仅有1个，那么以第1个字符为分隔符
@@ -109,10 +108,17 @@ public class ConfigUtils {
                 .build();
     }
 
-    public static List<RegexReplacementMo> readReplacements(String pluginName, List<String> replacementList) {
+    /**
+     * 从字符串列表中解析出替换信息列表
+     *
+     * @param replacementList 要解析的字符串列表
+     * @param pluginName      插件名称(用于出错时记录日志)
+     * @return 替换信息列表
+     */
+    public static List<RegexReplacementMo> parseReplacements(List<String> replacementList, String pluginName) {
         List<RegexReplacementMo> result = new LinkedList<>();
         for (final String regexReplacement : replacementList) {
-            result.add(readReplacement(pluginName, regexReplacement));
+            result.add(parseReplacement(regexReplacement, pluginName));
         }
         return result;
     }
