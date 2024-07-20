@@ -1,6 +1,26 @@
 main:
   routes:
     - src:
+        path:
+          - /adm-svr/*
+          - /dtw-svr/*
+          - /equ-svr/*
+          - /erp-svr/*
+          - /kno-svr/*
+          - /oss-svr/*
+          - /msg-svr/*
+          - /oa-svr/*
+          - /igt-svr/*
+          - /sms-svr/*
+          - /prod-svr/*
+      dst:
+        host: gateway_svr
+        port: 19090
+        client:
+          logActivity: true
+        filters:
+          auth: ''
+    - src:
         path: /ttyd/*
       dst:
         host: 127.0.0.1
