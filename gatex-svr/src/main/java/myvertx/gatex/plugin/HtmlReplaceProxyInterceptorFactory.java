@@ -4,6 +4,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import io.vertx.httpproxy.*;
 import org.apache.commons.lang3.StringUtils;
 
 import com.google.inject.Injector;
@@ -13,10 +14,6 @@ import io.vertx.core.MultiMap;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.impl.Arguments;
-import io.vertx.httpproxy.Body;
-import io.vertx.httpproxy.ProxyContext;
-import io.vertx.httpproxy.ProxyInterceptor;
-import io.vertx.httpproxy.ProxyResponse;
 import io.vertx.httpproxy.impl.BufferingWriteStream;
 import lombok.extern.slf4j.Slf4j;
 import myvertx.gatex.api.GatexProxyInterceptorFactory;
@@ -86,8 +83,11 @@ public class HtmlReplaceProxyInterceptorFactory implements GatexProxyInterceptor
         return new ProxyInterceptor() {
             @Override
             public Future<Void> handleProxyResponse(final ProxyContext proxyContext) {
-                log.debug("{}.handleProxyResponse: {}", name, proxyContext);
-                String              uri                 = proxyContext.request().getURI();
+                ProxyRequest request    = proxyContext.request();
+                String       methodName = request.getMethod().name();
+                String       uri        = request.getURI();
+                String       methodUri  = methodName + ":" + uri;
+                log.debug("{}.handleProxyResponse: {}", name, methodUri);
                 final ProxyResponse proxyResponse       = proxyContext.response();
                 final int           statusCode          = proxyResponse.getStatusCode();
                 MultiMap            responseHeaders     = proxyResponse.headers();

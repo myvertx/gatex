@@ -14,6 +14,7 @@ import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.impl.Arguments;
 import io.vertx.httpproxy.ProxyContext;
 import io.vertx.httpproxy.ProxyInterceptor;
+import io.vertx.httpproxy.ProxyRequest;
 import io.vertx.httpproxy.ProxyResponse;
 import lombok.extern.slf4j.Slf4j;
 import myvertx.gatex.api.GatexProxyInterceptorFactory;
@@ -62,7 +63,11 @@ public class RedirectProxyInterceptorFactory implements GatexProxyInterceptorFac
         return new ProxyInterceptor() {
             @Override
             public Future<Void> handleProxyResponse(final ProxyContext proxyContext) {
-                log.debug("redirect.handleProxyResponse: {}", proxyContext);
+                ProxyRequest request    = proxyContext.request();
+                String       methodName = request.getMethod().name();
+                String       uri        = request.getURI();
+                String       methodUri  = methodName + ":" + uri;
+                log.debug("{}.handleProxyResponse: {}", name, methodUri);
                 final ProxyResponse proxyResponse = proxyContext.response();
                 final int           statusCode    = proxyResponse.getStatusCode();
                 final String        contentType   = proxyResponse.headers().get(HttpHeaders.CONTENT_TYPE);

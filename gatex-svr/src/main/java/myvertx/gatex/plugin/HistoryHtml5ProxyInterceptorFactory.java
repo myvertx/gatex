@@ -35,16 +35,19 @@ public class HistoryHtml5ProxyInterceptorFactory implements GatexProxyIntercepto
         return new ProxyInterceptor() {
             @Override
             public Future<Void> handleProxyResponse(final ProxyContext proxyContext) {
-                log.debug("{}.handleProxyResponse: {}", name, proxyContext);
-                ProxyRequest      proxyRequest   = proxyContext.request();
-                ProxyResponse     proxyResponse  = proxyContext.response();
-                HttpServerRequest proxiedRequest = proxyRequest.proxiedRequest();
-                String            host           = dst.getHost();
-                int               port           = dst.getPort();
-                String            methodName     = proxiedRequest.method().name();
-                int               statusCode     = proxyResponse.getStatusCode();
+                ProxyRequest proxyRequest    = proxyContext.request();
+                String       proxyMethodName = proxyRequest.getMethod().name();
+                String       proxyUri        = proxyRequest.getURI();
+                String       proxyMethodUri  = proxyMethodName + ":" + proxyUri;
+                log.debug("{}.handleProxyResponse: {}", name, proxyMethodUri);
+                ProxyResponse     proxyResponse            = proxyContext.response();
+                HttpServerRequest proxiedRequest           = proxyRequest.proxiedRequest();
+                String            host                     = dst.getHost();
+                int               port                     = dst.getPort();
+                String            proxiedRequestMethodName = proxiedRequest.method().name();
+                int               statusCode               = proxyResponse.getStatusCode();
                 try {
-                    if ("GET".equals(methodName) && statusCode == 404) {
+                    if ("GET".equals(proxiedRequestMethodName) && statusCode == 404) {
                         log.info("{}:{}", host, port);
                         return webClient.get(port, host, "/index.html").putHeaders(proxiedRequest.headers())
                                 .send().compose(resp -> {

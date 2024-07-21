@@ -13,18 +13,15 @@ import io.vertx.core.MultiMap;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.impl.Arguments;
-import io.vertx.httpproxy.Body;
-import io.vertx.httpproxy.ProxyContext;
-import io.vertx.httpproxy.ProxyInterceptor;
-import io.vertx.httpproxy.ProxyResponse;
+import io.vertx.httpproxy.*;
 import io.vertx.httpproxy.impl.BufferingWriteStream;
 import lombok.extern.slf4j.Slf4j;
 import myvertx.gatex.api.GatexProxyInterceptorFactory;
 import myvertx.gatex.api.GatexRoute;
 import myvertx.gatex.mo.SrcPathMo;
-import rebue.wheel.vertx.util.BodyUtils;
 import myvertx.gatex.util.ConfigUtils;
 import rebue.wheel.core.UriUtils;
+import rebue.wheel.vertx.util.BodyUtils;
 
 /**
  * 给html内容中的head节点补上base节点的代理拦截器工厂
@@ -65,8 +62,11 @@ public class HtmlBaseProxyInterceptorFactory implements GatexProxyInterceptorFac
         return new ProxyInterceptor() {
             @Override
             public Future<Void> handleProxyResponse(final ProxyContext proxyContext) {
-                log.debug("{}.handleProxyResponse: {}", name, proxyContext);
-                String              uri                 = proxyContext.request().getURI();
+                ProxyRequest request    = proxyContext.request();
+                String       methodName = request.getMethod().name();
+                String       uri        = request.getURI();
+                String       methodUri  = methodName + ":" + uri;
+                log.debug("{}.handleProxyResponse: {}", name, methodUri);
                 final ProxyResponse proxyResponse       = proxyContext.response();
                 final int           statusCode          = proxyResponse.getStatusCode();
                 MultiMap            responseHeaders     = proxyResponse.headers();
