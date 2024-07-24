@@ -13,7 +13,7 @@
 
     <properties>
         <wheel.version>3.5.41</wheel.version>
-        <vertx.version>4.5.8</vertx.version>
+        <vertx.version>4.5.9</vertx.version>
         <guice.version>7.0.0</guice.version>
         <guava.version>33.0.0-jre</guava.version>
         <janino.version>3.1.12</janino.version>
