@@ -1,0 +1,26 @@
+{
+  "web": {
+    "config": {
+      "globalRouteHandlers": {
+        "auth": {
+          "admSvrHost": "gateway_svr",
+          "admSvrPort": 19090
+        }
+      },
+      "isLogging": true,
+      "isCors": true,
+      "server": {
+        "port": 19080,
+        "logActivity": true,
+        "perMessageWebSocketCompressionSupported": false,
+        "compressors": [
+          "gzip",
+          "brotli",
+          "deflate",
+          "snappy",
+          "zstd"
+        ]
+      }
+    }
+  }
+}

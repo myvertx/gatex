@@ -1,0 +1,13 @@
+jwt:
+  keyStore:
+    # keytool -genkeypair -keystore keystore.pfx -storepass xxxxxxxx -keyalg EC -groupname secp521r1 -alias ES512 -keypass xxxxxxxx -sigalg SHA512withECDSA -dname "CN=,OU=,O=,L=,ST=,C=" -validity 360
+    type: PKCS12
+    path: config/keystore.pfx
+    password: xxxxxxxx
+  jwtOptions:
+    # JWT签名算法
+    algorithm: ES512
+    # 签发者
+    issuer: zbz
+    # 超时时间(单位秒)
+    expires: 1800

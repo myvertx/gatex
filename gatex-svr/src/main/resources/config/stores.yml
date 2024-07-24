@@ -1,0 +1,14 @@
+# 每隔多少毫秒检查一下配置是否更新(单位是ms，默认是5秒)
+scanPeriod: 15000L
+stores:
+#  - type: file
+#    format: yaml
+#    optional: true
+#    config:
+#      path: config/application.yml
+  - type: consul
+    config:
+      host: consul
+      port: 8500
+      # 在consul的key/value中添加配置: key=${prefix}/config.yml
+      prefix: gatex01-svr

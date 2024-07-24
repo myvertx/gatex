@@ -124,9 +124,9 @@ public class HtmlReplaceProxyInterceptorFactory implements GatexProxyInterceptor
                     // 获取Body内容
                     String content = BodyUtils.getContent(contentEncoding, bufferingWriteStream.content());
 
-                    log.debug("准备修改内容content: {}", content);
+                    log.trace("准备修改内容content: {}", content);
                     for (RegexReplacementMo regexReplacementMo : regexReplacements) {
-                        log.debug("替换文本: {} -> {}", regexReplacementMo.getRegex(),
+                        log.trace("替换文本: {} -> {}", regexReplacementMo.getRegex(),
                                 regexReplacementMo.getReplacement());
                         content = content.replaceAll(regexReplacementMo.getRegex(),
                                 regexReplacementMo.getReplacement());
