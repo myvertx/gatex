@@ -2,7 +2,6 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-
     <parent>
         <groupId>io.github.myvertx</groupId>
         <artifactId>gatex</artifactId>
@@ -10,10 +9,11 @@
     </parent>
 
     <artifactId>gatex-svr</artifactId>
+    <name>gatex-svr</name>
     <description>基于vert.x构建的网关的服务器</description>
 
     <properties>
-        <docker.image.prefix>docker.io/nnzbz</docker.image.prefix>
+        <docker.image.group>nnzbz</docker.image.group>
         <launcher.class>io.vertx.core.Launcher</launcher.class>
         <main.verticle>myvertx.gatex.verticle.MainVerticle</main.verticle>
         <maven-shade-plugin.version>3.6.0</maven-shade-plugin.version>
@@ -29,6 +29,15 @@
             <scope>provided</scope>
         </dependency>
 
+        <dependency>
+            <groupId>io.github.myvertx</groupId>
+            <artifactId>gatex-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.github.myvertx</groupId>
+            <artifactId>gatex-util</artifactId>
+        </dependency>
+
         <!-- 此包中有与vertx重名重路径的类，所以放在最前 -->
         <dependency>
             <groupId>com.github.rebue.wheel</groupId>
@@ -39,14 +48,6 @@
             <artifactId>wheel-turing</artifactId>
         </dependency>
         <dependency>
-            <groupId>io.github.myvertx</groupId>
-            <artifactId>gatex-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.github.myvertx</groupId>
-            <artifactId>gatex-util</artifactId>
-        </dependency>
-        <dependency>
             <groupId>com.github.rebue.wheel</groupId>
             <artifactId>wheel-core</artifactId>
         </dependency>
@@ -54,16 +55,6 @@
         <dependency>
             <groupId>io.vertx</groupId>
             <artifactId>vertx-config</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.vertx</groupId>
-            <artifactId>vertx-config-git</artifactId>
-            <exclusions>
-                <exclusion>
-                    <artifactId>commons-logging</artifactId>
-                    <groupId>commons-logging</groupId>
-                </exclusion>
-            </exclusions>
         </dependency>
         <dependency>
             <groupId>io.vertx</groupId>
@@ -361,13 +352,11 @@
                     <!-- 此选项指定在settings.xml文件中设置的server -->
                     <useMavenSettingsForAuth>true</useMavenSettingsForAuth>
                     <!-- 发布到仓库，${docker.host}在settings.xml中统一配置 -->
-                    <repository>${docker.host}/${docker.image.prefix}/${project.artifactId}</repository>
+                    <repository>${docker.host}/${docker.image.group}/${project.artifactId}</repository>
                     <tag>${project.version}</tag>
                     <buildArgs>
-                        <JAR_FILE>${project.build.finalName}-prod.jar</JAR_FILE>
+                        <JAR_FILE>${project.build.finalName}-fat.jar</JAR_FILE>
                         <VERSION>${project.version}</VERSION>
-                        <http_proxy>socks5://127.0.0.1:12345</http_proxy>
-                        <https_proxy>socks5://127.0.0.1:12345</https_proxy>
                     </buildArgs>
                     <verbose>true</verbose>
                     <googleContainerRegistryEnabled>false</googleContainerRegistryEnabled>

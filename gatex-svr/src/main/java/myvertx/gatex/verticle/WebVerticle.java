@@ -15,7 +15,6 @@ import io.vertx.ext.web.Route;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.handler.StaticHandler;
 import io.vertx.ext.web.proxy.handler.ProxyHandler;
-import io.vertx.ext.web.proxy.handler.impl.ProxyHandlerImpl;
 import io.vertx.httpproxy.HttpProxy;
 import io.vertx.httpproxy.ProxyInterceptor;
 import jakarta.inject.Inject;
@@ -47,9 +46,7 @@ public class WebVerticle extends AbstractWebVerticle {
      */
     @Override
     protected void configRouter() {
-        if (router != null && router.getRoutes() != null) {
-            router.getRoutes().clear();
-        }
+        super.configRouter();
         _predicateFactories.clear();
         _proxyInterceptorFactories.clear();
 
@@ -103,7 +100,7 @@ public class WebVerticle extends AbstractWebVerticle {
             }
 
             if (routes.isEmpty()) {
-                log.info("此路由为全局路由");
+                log.info("添加路由，此路由为全局路由");
                 routes.add(router.route());
             }
 
@@ -215,6 +212,7 @@ public class WebVerticle extends AbstractWebVerticle {
      * @param isRegex 路径是否正则表达式
      */
     private void addRoute(final Router router, final List<Route> routes, String pathStr, final boolean isRegex) {
+        log.info("添加路由");
         String[] methods = null;
         if (pathStr.startsWith("[")) {
             final String[] pathSplit  = pathStr.split("]");
@@ -260,8 +258,9 @@ public class WebVerticle extends AbstractWebVerticle {
                 });
             } catch (Exception e) {
                 log.error("添加{}断言器异常", key, e);
-                if (mainProperties.getStrict())
+                if (mainProperties.getStrict()) {
                     throw e;
+                }
             }
         });
     }
@@ -287,8 +286,9 @@ public class WebVerticle extends AbstractWebVerticle {
                 httpProxy.addInterceptor(proxyInterceptor);
             } catch (Exception e) {
                 log.error("添加{}代理拦截器异常", key, e);
-                if (mainProperties.getStrict())
+                if (mainProperties.getStrict()) {
                     throw e;
+                }
             }
         });
     }
