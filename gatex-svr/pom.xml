@@ -29,6 +29,12 @@
             <scope>provided</scope>
         </dependency>
 
+        <!-- 此包中有与vertx重名重路径的类，所以放在最前 -->
+        <dependency>
+            <groupId>com.github.rebue.wheel</groupId>
+            <artifactId>wheel-vertx</artifactId>
+        </dependency>
+
         <dependency>
             <groupId>io.github.myvertx</groupId>
             <artifactId>gatex-api</artifactId>
@@ -38,11 +44,6 @@
             <artifactId>gatex-util</artifactId>
         </dependency>
 
-        <!-- 此包中有与vertx重名重路径的类，所以放在最前 -->
-        <dependency>
-            <groupId>com.github.rebue.wheel</groupId>
-            <artifactId>wheel-vertx</artifactId>
-        </dependency>
         <dependency>
             <groupId>com.github.rebue.wheel</groupId>
             <artifactId>wheel-turing</artifactId>
@@ -83,6 +84,10 @@
         <dependency>
             <groupId>io.vertx</groupId>
             <artifactId>vertx-amqp-client</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.vertx</groupId>
+            <artifactId>vertx-redis-client</artifactId>
         </dependency>
         <dependency>
             <groupId>io.vertx</groupId>

@@ -2,9 +2,10 @@
   "web": {
     "config": {
       "globalRouteHandlers": {
-        "auth": {
+        "admAuth": {
           "admSvrHost": "gateway_svr",
-          "admSvrPort": 19090
+          "admSvrPort": 19090,
+          "issuer": "zbz"
         }
       },
       "isLogging": true,

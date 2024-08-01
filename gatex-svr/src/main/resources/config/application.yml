@@ -19,7 +19,7 @@ main:
         client:
           logActivity: true
         filters:
-          auth: ''
+          admAuth: ''
     - src:
         path: /ttyd/*
       dst:
