@@ -40,8 +40,8 @@
 			<AppenderRef ref="logfile" />
 			<AppenderRef ref="errfile" />
 		</Root>
-<!--		<Logger name="com.hazelcast" level="info" />-->
-<!--		<Logger name="io.netty" level="info" />-->
+		<Logger name="com.hazelcast" level="info" />
+		<Logger name="io.netty" level="info" />
 <!--		<Logger name="io.netty.handler.logging.LoggingHandler" level="debug" />-->
 	</Loggers>
 
