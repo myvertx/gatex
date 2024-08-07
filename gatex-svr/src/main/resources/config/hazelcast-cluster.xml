@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright 2017 Red Hat, Inc.
+  ~
+  ~ Red Hat licenses this file to you under the Apache License, version 2.0
+  ~ (the "License"); you may not use this file except in compliance with the
+  ~ License.  You may obtain a copy of the License at:
+  ~
+  ~ http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+  ~ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
+  ~ License for the specific language governing permissions and limitations
+  ~ under the License.
+  -->
+
+<hazelcast xmlns="http://www.hazelcast.com/schema/config"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="http://www.hazelcast.com/schema/config
+           https://www.hazelcast.com/schema/config/hazelcast-config-5.3.xsd">
+
+    <network>
+        <join>
+            <multicast/>
+        </join>
+    </network>
+
+    <multimap name="__vertx.subs">
+        <backup-count>1</backup-count>
+        <value-collection-type>SET</value-collection-type>
+    </multimap>
+
+    <map name="__vertx.haInfo">
+        <backup-count>1</backup-count>
+    </map>
+
+    <map name="__vertx.nodeInfo">
+        <backup-count>1</backup-count>
+    </map>
+
+    <!-- 自定义集群名称，避免冲突 -->
+    <cluster-name>rebue</cluster-name>
+
+    <!-- 使用slf4j打印日志 -->
+    <properties>
+        <property name="hazelcast.logging.type">slf4j</property>
+<!--        <property name="hazelcast.security.recommendations"/>-->
+<!--        <property name="hazelcast.diagnostics.enabled">true</property>-->
+    </properties>
+
+    <!-- 开启 jet 引擎，提高集群性能 -->
+    <jet enabled="true"/>
+
+    <!-- 开启 TPC，支持分布式事务 -->
+    <tpc enabled="true"/>
+
+    <!-- 开启 integrity-checker，启动会慢一些，如要求快速启动，可不开启 -->
+    <integrity-checker enabled="true"/>
+
+    <!-- 开启 cp-subsystem，提供强一致性和高可用，比较耗性能，如没有强一致性要求建议不开启 -->
+    <cp-subsystem>
+        <!-- 设置为 0 不开启，否则至少要设置为 3 -->
+        <cp-member-count>0</cp-member-count>
+    </cp-subsystem>
+</hazelcast>
