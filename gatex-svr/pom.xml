@@ -22,12 +22,12 @@
 
     <dependencies>
         <!-- TODO 临时添加测试，测试完后删除 -->
-        <dependency>
-            <groupId>rebue.adm</groupId>
-            <artifactId>adm-gatex-plugin</artifactId>
-            <version>1.0.0</version>
-            <scope>provided</scope>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>rebue.adm</groupId>-->
+<!--            <artifactId>adm-gatex-plugin</artifactId>-->
+<!--            <version>1.0.0</version>-->
+<!--            <scope>provided</scope>-->
+<!--        </dependency>-->
 
         <!-- 此包中有与vertx重名重路径的类，所以放在最前 -->
         <dependency>
@@ -69,15 +69,15 @@
             <groupId>io.vertx</groupId>
             <artifactId>vertx-web-client</artifactId>
         </dependency>
-        <dependency>
-            <groupId>io.vertx</groupId>
-            <artifactId>vertx-hazelcast</artifactId>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>io.vertx</groupId>-->
+<!--            <artifactId>vertx-hazelcast</artifactId>-->
+<!--        </dependency>-->
         <dependency>
             <groupId>io.vertx</groupId>
             <artifactId>vertx-zookeeper</artifactId>
             <exclusions>
-                <exclusion>
+                 <exclusion>
                     <artifactId>logback-core</artifactId>
                     <groupId>ch.qos.logback</groupId>
                 </exclusion>

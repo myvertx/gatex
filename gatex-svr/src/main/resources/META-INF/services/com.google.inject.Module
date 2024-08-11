@@ -1,1 +1,2 @@
 rebue.wheel.vertx.guice.WebClientGuiceModule
+rebue.wheel.vertx.guice.RedisGuiceModule
