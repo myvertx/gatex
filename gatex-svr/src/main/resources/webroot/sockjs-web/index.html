@@ -1,0 +1,28 @@
+<html>
+<head>
+    <script src="http://unpkg.com/sockjs-client@1.6.1/dist/sockjs.min.js"></script>
+</head>
+<body>
+...
+</body>
+<script>
+    var protocol = window.location.protocol; // e.g., "http:"
+    var host = window.location.host;         // e.g., "www.example.com:80"
+    //var pathname = window.location.pathname; // e.g., "/path/to/page"
+
+    var sock = new SockJS(protocol + '//' + host + '/uiam/sockjs');
+    sock.onopen = function () {
+        console.log('open');
+        sock.send('test');
+    };
+
+    sock.onmessage = function (e) {
+        console.log('message', e.data);
+        sock.close();
+    };
+
+    sock.onclose = function () {
+        console.log('close');
+    };
+</script>
+</html>
