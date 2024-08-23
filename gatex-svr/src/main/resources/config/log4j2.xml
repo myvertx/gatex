@@ -42,6 +42,7 @@
 		</Root>
 		<Logger name="com.hazelcast" level="info" />
 		<Logger name="io.netty" level="info" />
+		<Logger name="org.apache.kafka" level="warn" />
 <!--		<Logger name="io.netty.handler.logging.LoggingHandler" level="debug" />-->
 	</Loggers>
 

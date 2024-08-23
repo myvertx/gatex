@@ -5,7 +5,7 @@
     <parent>
         <groupId>io.github.myvertx</groupId>
         <artifactId>gatex</artifactId>
-        <version>1.3.35</version>
+        <version>1.3.36</version>
     </parent>
 
     <artifactId>gatex-svr</artifactId>
@@ -69,10 +69,10 @@
             <groupId>io.vertx</groupId>
             <artifactId>vertx-web-client</artifactId>
         </dependency>
-<!--        <dependency>-->
-<!--            <groupId>io.vertx</groupId>-->
-<!--            <artifactId>vertx-hazelcast</artifactId>-->
-<!--        </dependency>-->
+        <dependency>
+            <groupId>io.vertx</groupId>
+            <artifactId>vertx-hazelcast</artifactId>
+        </dependency>
         <dependency>
             <groupId>io.vertx</groupId>
             <artifactId>vertx-zookeeper</artifactId>
@@ -317,13 +317,14 @@
                             <goal>shade</goal>
                         </goals>
                         <configuration>
-                            <!-- 过滤器排除配置文件-->
+                            <!-- 过滤器排除文件-->
                             <filters>
                                 <filter>
                                     <artifact>*:*</artifact>
                                     <excludes>
                                         <exclude>logback.xml</exclude>
                                         <exclude>config/</exclude>
+                                        <exclude>webroot/</exclude>
                                         <!-- 不打包下面的文件，否则运行时会报错Error: A JNI error has occurred, please check your installation and try again -->
                                         <exclude>META-INF/*.SF</exclude>
                                         <exclude>META-INF/*.DSA</exclude>
