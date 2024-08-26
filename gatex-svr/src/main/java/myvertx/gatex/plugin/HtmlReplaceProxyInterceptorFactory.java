@@ -4,7 +4,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import io.vertx.httpproxy.*;
 import org.apache.commons.lang3.StringUtils;
 
 import com.google.inject.Injector;
@@ -14,14 +13,15 @@ import io.vertx.core.MultiMap;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.impl.Arguments;
+import io.vertx.httpproxy.*;
 import io.vertx.httpproxy.impl.BufferingWriteStream;
 import lombok.extern.slf4j.Slf4j;
 import myvertx.gatex.api.GatexProxyInterceptorFactory;
 import myvertx.gatex.api.GatexRoute;
 import myvertx.gatex.mo.HtmlReplaceConfigMo;
 import myvertx.gatex.mo.RegexReplacementMo;
-import rebue.wheel.vertx.util.BodyUtils;
 import myvertx.gatex.util.ConfigUtils;
+import rebue.wheel.vertx.util.BodyUtils;
 
 /**
  * 给html内容中的链接补上前缀的代理拦截器工厂
@@ -98,7 +98,8 @@ public class HtmlReplaceProxyInterceptorFactory implements GatexProxyInterceptor
                 if (statusCode != 200 || StringUtils.isBlank(responseContentType)
                         || (!responseContentType.contains("text/html")
                                 && !responseContentType.contains("text/javascript")
-                                && !responseContentType.contains("application/javascript"))) {
+                                && !responseContentType.contains("application/javascript")
+                                && !responseContentType.contains("application/json"))) {
                     return proxyContext.sendResponse();
                 }
 
