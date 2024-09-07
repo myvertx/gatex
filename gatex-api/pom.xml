@@ -11,7 +11,7 @@
 
     <properties>
         <wheel.version>3.5.44</wheel.version>
-        <vertx.version>4.5.9</vertx.version>
+        <vertx.version>4.5.10</vertx.version>
         <guice.version>7.0.0</guice.version>
         <guava.version>33.0.0-jre</guava.version>
         <lombok.version>1.18.32</lombok.version>
