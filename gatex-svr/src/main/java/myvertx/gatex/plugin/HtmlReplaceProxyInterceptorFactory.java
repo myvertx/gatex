@@ -95,7 +95,7 @@ public class HtmlReplaceProxyInterceptorFactory implements GatexProxyInterceptor
                 final String        contentEncoding     = responseHeaders.get(HttpHeaders.CONTENT_ENCODING);
                 log.debug("state code: {}; content-type: {}", statusCode, responseContentType);
                 // 不是html或js不进行替换
-                if (statusCode != 200 || StringUtils.isBlank(responseContentType)
+                if (statusCode != 200 && statusCode != 202 || StringUtils.isBlank(responseContentType)
                         || (!responseContentType.contains("text/html")
                                 && !responseContentType.contains("text/javascript")
                                 && !responseContentType.contains("application/javascript")
