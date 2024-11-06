@@ -1,5 +1,6 @@
 package myvertx.gatex.plugin;
 
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -34,32 +35,50 @@ public class RedirectProxyInterceptorFactory implements GatexProxyInterceptorFac
         return name;
     }
 
+    private static final int[] STATUS_CODES = { 201, 301, 302, 303, 307, 308 };
+
     @Override
     public ProxyInterceptor create(Vertx vertx, Injector injector, GatexRoute.Dst dst, Object options) {
         Arguments.require(options != null, "并未配置%s的值".formatted(name));
 
         log.info("{}:{}", name, options);
 
+        String               locationConfig           = null;
+        String               locationPrefixConfig     = null;
+        String               locationReplaceConfig    = null;
+
         @SuppressWarnings("unchecked")
-        final Map<String, String> redirectConfig              = (Map<String, String>) options;
-        String                    locationConfig              = redirectConfig.get("location");
-        String                    locationPrefixConfig        = redirectConfig.get("locationPrefix");
-        String                    locationPrefixReplaceConfig = redirectConfig.get("locationPrefixReplace");
-        if (StringUtils.isAllBlank(locationConfig, locationPrefixConfig, locationPrefixReplaceConfig)) {
-            throw new IllegalArgumentException("请配置location/locationPrefix/locationPrefixReplace其中任意一个的值");
+        final Map<String, ?> redirectConfig           = (Map<String, ?>) options;
+        Object               locationConfigObj        = redirectConfig.get("location");
+        Object               locationPrefixConfigObj  = redirectConfig.get("locationPrefix");
+        Object               locationReplaceConfigObj = redirectConfig.get("locationReplace");
+
+        if (locationConfigObj != null) {
+            locationConfig = locationConfigObj.toString();
+        } else if (locationPrefixConfigObj != null) {
+            locationPrefixConfig = locationPrefixConfigObj.toString();
+        } else if (locationReplaceConfigObj != null) {
+            locationReplaceConfig = locationReplaceConfigObj.toString();
         }
 
-        String locationPrefixReplaceSrcTemp = null;
-        String locationPrefixReplaceDstTemp = null;
-        if (StringUtils.isNotBlank(locationPrefixReplaceConfig)) {
+        if (StringUtils.isAllBlank(locationConfig, locationPrefixConfig, locationReplaceConfig)) {
+            throw new IllegalArgumentException("请配置location/locationPrefix/locationReplace其中任意一个的值");
+        }
+
+        String finalLocationConfig        = locationConfig;
+        String finalLocationPrefixConfig  = locationPrefixConfig;
+        String finalLocationReplaceConfig = locationReplaceConfig;
+
+        String locationReplaceSrcTemp     = "";
+        String locationReplaceDstTemp     = "";
+        if (StringUtils.isNotBlank(locationReplaceConfig)) {
             Iterator<String> detailIterator = Splitter.on(':').trimResults().omitEmptyStrings()
-                    .split(locationPrefixReplaceConfig).iterator();
-            locationPrefixReplaceSrcTemp = detailIterator.next();
-            locationPrefixReplaceDstTemp = detailIterator.hasNext() ? detailIterator.next() : "";
+                    .split(locationReplaceConfig).iterator();
+            locationReplaceSrcTemp = detailIterator.next();
+            locationReplaceDstTemp = detailIterator.hasNext() ? detailIterator.next() : "";
         }
-        String locationPrefixReplaceSrc = locationPrefixReplaceSrcTemp;
-        String locationPrefixReplaceDst = locationPrefixReplaceDstTemp;
-
+        String finalLocationReplaceSrc = locationReplaceSrcTemp;
+        String finalLocationReplaceDst = locationReplaceDstTemp;
         return new ProxyInterceptor() {
             @Override
             public Future<Void> handleProxyResponse(final ProxyContext proxyContext) {
@@ -72,15 +91,16 @@ public class RedirectProxyInterceptorFactory implements GatexProxyInterceptorFac
                 final int           statusCode    = proxyResponse.getStatusCode();
                 final String        contentType   = proxyResponse.headers().get(HttpHeaders.CONTENT_TYPE);
                 log.debug("state code: {}; content-type: {}", statusCode, contentType);
-                if (statusCode == 301 || statusCode == 302) {
+
+                if (Arrays.binarySearch(STATUS_CODES, statusCode) != -1) {
                     String location = proxyResponse.headers().get(HttpHeaders.LOCATION);
                     log.debug("origin location: {}", location);
-                    if (StringUtils.isNotBlank(locationConfig)) {
-                        location = locationConfig;
-                    } else if (StringUtils.isNotBlank(locationPrefixConfig)) {
-                        location = locationPrefixConfig + location;
-                    } else if (StringUtils.isNotBlank(locationPrefixReplaceConfig)) {
-                        location = location.replaceFirst("^" + locationPrefixReplaceSrc, locationPrefixReplaceDst);
+                    if (StringUtils.isNotBlank(finalLocationConfig)) {
+                        location = finalLocationConfig;
+                    } else if (StringUtils.isNotBlank(finalLocationPrefixConfig)) {
+                        location = finalLocationPrefixConfig + location;
+                    } else if (StringUtils.isNotBlank(finalLocationReplaceConfig)) {
+                        location = location.replaceFirst("^" + finalLocationReplaceSrc, finalLocationReplaceDst);
                     }
                     log.debug("modified location: {}", location);
                     proxyResponse.headers().set(HttpHeaders.LOCATION, location);
