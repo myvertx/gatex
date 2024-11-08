@@ -33,7 +33,10 @@ public class PathPrefixReplaceProxyInterceptorFactory implements GatexProxyInter
         final String pathPrefixReplace = (String) options;
         Arguments.require(StringUtils.isNotBlank(pathPrefixReplace), "并未配置%s的值".formatted(name));
 
-        Iterator<String> detailIterator = Splitter.on(':').trimResults().omitEmptyStrings().split(pathPrefixReplace)
+        Iterator<String> detailIterator = Splitter.on(':')
+                .trimResults()
+                .omitEmptyStrings()
+                .split(pathPrefixReplace)
                 .iterator();
         String           regex          = detailIterator.next();
         String           replacement    = detailIterator.hasNext() ? detailIterator.next() : "";
