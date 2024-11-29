@@ -107,16 +107,19 @@ public class WebVerticle extends AbstractWebVerticle {
             log.info("解析main.routes[].dst");
             final Dst dst = gatexRouteConfig.getDst();
             Arguments.require(dst != null, "main.routes[].dst不能为null");
-            Arguments.require(dst.getHost() != null, "main.routes[].dst.host不能为null");
 
             try {
-                if ("static".equalsIgnoreCase(dst.getHost())) {
-                    // 配置静态资源类的路由
+                String dstType = dst.getType().toLowerCase();
+                // 判断目的地类型
+                if (dstType.equals("static") || "static".equalsIgnoreCase(dst.getHost())) {
+                    // 配置静态资源路由
                     configStaticRoutes(routes, dst);
-                }
-                // 代理路由
-                else {
-                    configProxyRoute(routes, dst);
+                } else if (dstType.equals("reroute")) {
+                    // 配置重新路由
+                    configReroutes(routes, dst);
+                } else {
+                    // 配置主机路由(反向代理路由)
+                    configHostRoutes(routes, dst);
                 }
             } catch (Exception err) {
                 log.error("配置路由出错", err);
@@ -126,15 +129,15 @@ public class WebVerticle extends AbstractWebVerticle {
     }
 
     /**
-     * 配置静态资源类的路由
+     * 配置静态资源路由
      *
      * @param routes 要配置的路由列表
      * @param dst    目的地配置
      */
     private void configStaticRoutes(final List<Route> routes, final Dst dst) {
-        log.info("配置静态资源类的路由");
+        log.info("配置静态资源路由");
         log.info("遍历当前循环的路由列表中的每一个路由，并添加静态处理器");
-        routes.forEach(route -> {
+        for (Route route : routes) {
             addPredicateHandler(route, dst.getPredicates());
 
             log.info("设置静态根目录");
@@ -147,17 +150,52 @@ public class WebVerticle extends AbstractWebVerticle {
                 // route.failureHandler(new HistoryHtml5Handler(route.getPath()));
                 route.handler(ctx -> ctx.response().sendFile(staticRootDirectory + "index.html"));
             }
-        });
+        }
     }
 
     /**
-     * 配置代理类的路由
+     * 配置重新路由
+     * 
+     * @param routes 路由列表
+     * @param dst    路由目的地
+     */
+    private void configReroutes(List<Route> routes, Dst dst) {
+        log.info("配置重新路由");
+        String[]   pathSplit = dst.getPath().split(":");
+        HttpMethod method;
+        String     path;
+        if (pathSplit.length == 2) {
+            method = HttpMethod.valueOf(pathSplit[0]);
+            path   = pathSplit[1];
+        } else {
+            path   = dst.getPath();
+            method = null;
+        }
+
+        log.info("遍历当前循环的路由列表中的每一个路由，并添加重新路由处理器");
+        for (Route route : routes) {
+            if (method == null) {
+                route.handler(routingContext -> {
+                    log.debug("重新路由: {} -> {}", route.getPath(), path);
+                    routingContext.reroute(path);
+                });
+            } else {
+                route.handler(routingContext -> {
+                    log.debug("重新路由: {} -> {}", route.getPath(), dst.getPath());
+                    routingContext.reroute(method, path);
+                });
+            }
+        }
+    }
+
+    /**
+     * 配置主机路由(反向代理路由)
      *
      * @param routes 路由列表
      * @param dst    路由目的地
      */
-    private void configProxyRoute(final List<Route> routes, final Dst dst) {
-        log.info("配置代理类的路由");
+    private void configHostRoutes(final List<Route> routes, final Dst dst) {
+        log.info("配置主机路由(反向代理路由)");
         Arguments.require(dst.getPort() != null, "main.routes[].dst.port不能为null");
 
         log.info("创建HTTP代理");
@@ -195,12 +233,12 @@ public class WebVerticle extends AbstractWebVerticle {
         httpProxy.originRequestProvider((req, client) -> client.request(requestOptions));
 
         log.info("遍历当前循环的路由列表中的每一个路由，并添加代理处理器");
-        routes.forEach(route -> {
+        for (Route route : routes) {
             log.debug("路由: {}", route.getPath());
             addPredicateHandler(route, dst.getPredicates());
             log.info("给路由添加代理处理器");
             route.handler(proxyHandler);
-        });
+        }
     }
 
     /**

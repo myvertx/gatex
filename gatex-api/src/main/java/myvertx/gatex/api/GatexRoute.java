@@ -41,6 +41,13 @@ public class GatexRoute {
     @Data
     public static class Dst {
         /**
+         * 目的地类型
+         * host: 主机
+         * static: 静态资源(path 的值为静态资源的相对静态资源根目录的路径)
+         * reroute: 重新路由(path 的值为重新路由的路径)
+         */
+        private String              type    = "host";
+        /**
          * 目的地的主机名(如果是本机静态网站，请填static，且不用填写port项)
          */
         private String              host;

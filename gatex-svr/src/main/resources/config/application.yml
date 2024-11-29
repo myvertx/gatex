@@ -20,6 +20,13 @@ main:
           logActivity: true
         filters:
           admAuth: ''
+    # 微信校验文件
+    - src:
+        path: /c6jZsGGRyD.txt
+      dst:
+        host: gatex02_svr
+        port: 19080
+        pathReplace: /admin-web/c6jZsGGRyD.txt
     - src:
         path: /ttyd/*
       dst:
