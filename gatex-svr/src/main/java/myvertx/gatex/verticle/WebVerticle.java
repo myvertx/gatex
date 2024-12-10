@@ -141,7 +141,7 @@ public class WebVerticle extends AbstractWebVerticle {
             addPredicateHandler(route, dst.getPredicates());
 
             log.info("设置静态根目录");
-            final String staticRootDirectory = "webroot" + route.getPath();
+            final String staticRootDirectory = StaticHandler.DEFAULT_WEB_ROOT + route.getPath();
             log.info("静态根目录: {}", staticRootDirectory);
             route.handler(StaticHandler.create(staticRootDirectory));
 
