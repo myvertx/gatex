@@ -2,6 +2,7 @@ package myvertx.gatex.config;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import lombok.Data;
 import myvertx.gatex.api.GatexRoute;
@@ -13,10 +14,15 @@ public class MainProperties {
      * 如果是严格模式，启动时读取配置的时候，配置的格式不对或值不符合要求，会停止运行，否则只是警告
      * 默认为true
      */
-    private Boolean          strict = true;
+    private Boolean             strict = true;
     /**
      * 路由列表
      */
-    private List<GatexRoute> routes = new LinkedList<>();
+    private List<GatexRoute>    routes = new LinkedList<>();
 
+    /**
+     * 创建 HttpClient 的配置选项
+     * HttpClientOptions
+     */
+    private Map<String, Object> client;
 }

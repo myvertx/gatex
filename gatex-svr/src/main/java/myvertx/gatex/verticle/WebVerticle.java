@@ -32,6 +32,8 @@ public class WebVerticle extends AbstractWebVerticle {
     @Inject
     private MainProperties                                  mainProperties;
 
+    private HttpClient                                      _httpClient;
+
     /**
      * 断言器工厂列表
      */
@@ -65,6 +67,11 @@ public class WebVerticle extends AbstractWebVerticle {
             log.info("注册代理拦截器工厂: {}", factory.name());
             this._proxyInterceptorFactories.put(factory.name(), factory);
         });
+
+        log.info("创建 HttpClient");
+        _httpClient = this.vertx.createHttpClient(mainProperties.getClient() == null
+                ? new HttpClientOptions()
+                : new HttpClientOptions(JsonObject.mapFrom(mainProperties.getClient())));
 
         log.info("根据配置中的路由列表来配置路由");
         log.info("********************************************************");
@@ -199,14 +206,12 @@ public class WebVerticle extends AbstractWebVerticle {
         Arguments.require(dst.getPort() != null, "main.routes[].dst.port不能为null");
 
         log.info("创建HTTP代理");
-        // 获取HttpClientOptions
-        final HttpClientOptions httpClientOptions = dst.getClient() == null ? new HttpClientOptions()
-                : new HttpClientOptions(JsonObject.mapFrom(dst.getClient()));
-        // 创建httpClient
-        final HttpClient        httpClient        = this.vertx.createHttpClient(httpClientOptions);
+        HttpClient     httpClient = dst.getClient() == null
+                ? _httpClient
+                : this.vertx.createHttpClient(new HttpClientOptions(JsonObject.mapFrom(dst.getClient())));
 
-        HttpProxy               httpProxy         = HttpProxy.reverseProxy(httpClient);
-        RequestOptions          requestOptions;
+        HttpProxy      httpProxy  = HttpProxy.reverseProxy(httpClient);
+        RequestOptions requestOptions;
         if (dst.getRequest() == null) {
             requestOptions = new RequestOptions();
         } else {

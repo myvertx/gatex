@@ -12,7 +12,8 @@ import org.apache.pulsar.client.api.Schema;
 import com.google.inject.Injector;
 
 import io.vertx.core.Future;
-import io.vertx.core.buffer.Buffer;
+import io.vertx.core.MultiMap;
+import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.impl.Arguments;
 import io.vertx.core.json.JsonObject;
@@ -26,6 +27,7 @@ import myvertx.gatex.drools.fact.RequestFact;
 import myvertx.gatex.handler.ParsedBodyHandler;
 import myvertx.gatex.handler.RerouteHandler;
 import rebue.wheel.core.drools.DroolsWatcher;
+import rebue.wheel.vertx.util.BodyUtils;
 
 @Slf4j
 public class ProxyInterceptorUtils {
@@ -46,17 +48,20 @@ public class ProxyInterceptorUtils {
 
         final ProxyRequest         request              = proxyContext.request();
         final Body                 body                 = request.getBody();
+        final ProxyResponse        proxyResponse        = proxyContext.response();
+        MultiMap                   responseHeaders      = proxyResponse.headers();
+        final String               contentEncoding      = responseHeaders.get(HttpHeaders.CONTENT_ENCODING);
         final BufferingWriteStream bufferingWriteStream = new BufferingWriteStream();
         log.debug("准备读取请求的body");
         return body.stream().pipeTo(bufferingWriteStream).compose(v -> {
-            final String sBody = bufferingWriteStream.content().toString();
+            final String sBody = BodyUtils.getContent(contentEncoding, bufferingWriteStream.content());
             log.debug("body: {}", sBody);
             if (parsedBodyHandler != null) {
                 parsedBodyHandler.handle(proxyContext, sBody);
             }
 
             // 重新设置body
-            request.setBody(Body.body(Buffer.buffer(sBody)));
+            request.setBody(BodyUtils.newBody(contentEncoding, sBody));
 
             // 继续拦截器
             return proxyContext.sendRequest();
@@ -160,11 +165,13 @@ public class ProxyInterceptorUtils {
                 final Body                 body                 = proxyResponse.getBody();
                 final BufferingWriteStream bufferingWriteStream = new BufferingWriteStream();
                 log.debug("准备读取响应的body");
+                MultiMap     responseHeaders = proxyResponse.headers();
+                final String contentEncoding = responseHeaders.get(HttpHeaders.CONTENT_ENCODING);
                 return body.stream().pipeTo(bufferingWriteStream).compose(v -> {
                     // 读取缓存中请求的原始body
                     String sRequestBody = proxyContext.get("originRequestBody", String.class);
                     log.debug("request body: {}", sRequestBody);
-                    final String sResponseBody = bufferingWriteStream.content().toString();
+                    final String sResponseBody = BodyUtils.getContent(contentEncoding, bufferingWriteStream.content());
                     log.debug("response body: {}", sResponseBody);
 
                     // 判断第一个接口是否不能处理
@@ -191,7 +198,7 @@ public class ProxyInterceptorUtils {
                                                 proxyResponse
                                                         .setStatusCode(200)
                                                         .putHeader("Content-Type", "application/json")
-                                                        .setBody(Body.body(bufferHttpResponse.body()));
+                                                        .setBody(BodyUtils.newBody(contentEncoding, sResponseBody));
                                                 return proxyContext.sendResponse();
                                             }).recover(err -> {
                                                 final String msg = "转向调用第二个接口失败";
@@ -208,7 +215,7 @@ public class ProxyInterceptorUtils {
                     }
 
                     // 重新设置body
-                    proxyResponse.setBody(Body.body(Buffer.buffer(sResponseBody)));
+                    proxyResponse.setBody(BodyUtils.newBody(contentEncoding, sResponseBody));
                     // 继续拦截器
                     return proxyContext.sendResponse();
                 }).recover(err -> {
