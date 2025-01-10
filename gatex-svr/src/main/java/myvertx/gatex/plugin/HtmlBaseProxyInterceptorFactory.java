@@ -87,7 +87,7 @@ public class HtmlBaseProxyInterceptorFactory implements GatexProxyInterceptorFac
                         String content = BodyUtils.getContent(contentEncoding, bufferingWriteStream.content());
 
                         // 修改内容
-                        content = content.replaceAll("<head>", "<head><base href=\"" + baseHref + "\">");
+                        content = content.replaceAll("<head>", "<head><base href=\"" + baseHref + "\"/>");
 
                         // 重新设置body
                         proxyResponse.setBody(BodyUtils.newBody(contentEncoding, content));

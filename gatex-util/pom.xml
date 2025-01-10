@@ -17,11 +17,11 @@
         <guice.version>7.0.0</guice.version>
         <guava.version>33.0.0-jre</guava.version>
         <janino.version>3.1.12</janino.version>
-        <drools.version>9.44.0.Final</drools.version>
+        <drools.version>10.0.0</drools.version>
         <pulsar.version>3.2.2</pulsar.version>
         <commons-lang3.version>3.14.0</commons-lang3.version>
         <slf4j.version>2.0.7</slf4j.version>
-        <logback.version>1.5.6</logback.version>
+        <logback.version>1.5.15</logback.version>
         <junit.version>5.11.3</junit.version>
         <lombok.version>1.18.34</lombok.version>
     </properties>
