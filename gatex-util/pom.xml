@@ -12,8 +12,8 @@
     <description>基于vert.x构建的网关的工具</description>
 
     <properties>
-        <wheel.version>3.5.47</wheel.version>
-        <vertx.version>4.5.10</vertx.version>
+        <wheel.version>3.5.48</wheel.version>
+        <vertx.version>4.5.13</vertx.version>
         <guice.version>7.0.0</guice.version>
         <guava.version>33.0.0-jre</guava.version>
         <janino.version>3.1.12</janino.version>
@@ -21,9 +21,9 @@
         <pulsar.version>3.2.2</pulsar.version>
         <commons-lang3.version>3.14.0</commons-lang3.version>
         <slf4j.version>2.0.7</slf4j.version>
-        <logback.version>1.5.15</logback.version>
-        <junit.version>5.11.3</junit.version>
-        <lombok.version>1.18.34</lombok.version>
+        <logback.version>1.5.16</logback.version>
+        <junit.version>5.11.4</junit.version>
+        <lombok.version>1.18.36</lombok.version>
     </properties>
 
     <url>https://github.com/myvertx/gatex</url>
