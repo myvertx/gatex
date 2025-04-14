@@ -97,12 +97,15 @@ public class HtmlReplaceProxyInterceptorFactory implements GatexProxyInterceptor
                 final String        responseContentType = responseHeaders.get(HttpHeaders.CONTENT_TYPE);
                 final String        contentEncoding     = responseHeaders.get(HttpHeaders.CONTENT_ENCODING);
                 log.debug("state code: {}; content-type: {}", statusCode, responseContentType);
-                // 不是html/js/json不进行替换
+                // 不是html/js/css/json不进行替换
                 if (Arrays.binarySearch(STATUS_CODES, statusCode) < 0 || StringUtils.isBlank(responseContentType)
                         || !(responseContentType.contains("text/html")
                                 || responseContentType.contains("text/javascript")
+                                || responseContentType.contains("text/css")
+                                || responseContentType.contains("text/x-component")
                                 || responseContentType.contains("application/javascript")
-                                || responseContentType.contains("application/json"))) {
+                                || responseContentType.contains("application/json")
+                )) {
                     return proxyContext.sendResponse();
                 }
 
