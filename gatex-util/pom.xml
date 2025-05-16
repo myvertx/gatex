@@ -5,7 +5,7 @@
     <parent>
         <artifactId>gatex</artifactId>
         <groupId>io.github.myvertx</groupId>
-        <version>1.3.38</version>
+        <version>1.3.39</version>
     </parent>
 
     <artifactId>gatex-util</artifactId>
@@ -13,7 +13,7 @@
 
     <properties>
         <wheel.version>3.5.50</wheel.version>
-        <vertx.version>4.5.13</vertx.version>
+        <vertx.version>4.5.14</vertx.version>
         <guice.version>7.0.0</guice.version>
         <guava.version>33.0.0-jre</guava.version>
         <janino.version>3.1.12</janino.version>
