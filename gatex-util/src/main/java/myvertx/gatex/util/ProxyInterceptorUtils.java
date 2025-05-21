@@ -4,10 +4,6 @@ import java.net.URL;
 import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.pulsar.client.api.Producer;
-import org.apache.pulsar.client.api.PulsarClient;
-import org.apache.pulsar.client.api.PulsarClientException;
-import org.apache.pulsar.client.api.Schema;
 
 import com.google.inject.Injector;
 
@@ -228,52 +224,52 @@ public class ProxyInterceptorUtils {
         };
     }
 
-    /**
-     * 建立C类型代理拦截器
-     * 在请求的同时发送一条消息到pulsar服务器
-     *
-     * @param interceptorName 拦截器名称
-     * @param options         配置选项
-     * @return 拦截器
-     */
-    @SneakyThrows
-    public static ProxyInterceptor createProxyInterceptorC(final String interceptorName, final Object options,
-            Injector injector) {
-        log.info("createProxyInterceptorC {}: {}", interceptorName, options);
-        Arguments.require(options != null, "并未配置" + interceptorName + "的值");
-        Arguments.require(options instanceof Map, interceptorName + "的值必须为Map类型");
-
-        @SuppressWarnings("unchecked")
-        final Map<String, Object> optionsMap  = (Map<String, Object>) options;
-        final Object              topicObject = optionsMap.get("topic");
-        Arguments.require(topicObject != null, "并未配置" + interceptorName + ".topic的值");
-        String sTopic = (String) topicObject;
-        Arguments.require(StringUtils.isNotBlank(sTopic), interceptorName + ".topic的值不能为空");
-
-        final PulsarClient pulsarClient = injector.getInstance(PulsarClient.class);
-        Producer<String>   producer     = pulsarClient.newProducer(Schema.STRING).topic(sTopic).create();
-        return ProxyInterceptorUtils.createProxyInterceptorA(interceptorName, options, (proxyContext, sRequestBody) -> {
-            try {
-                ProxyRequest proxyRequest = proxyContext.request();
-                String       method       = proxyRequest.getMethod().name();
-                String       uri          = proxyRequest.getURI();
-                log.debug("{}接收到请求: {} {}", interceptorName, uri, sRequestBody);
-
-                RequestFact requestFact = RequestFact.builder()
-                        .method(method)
-                        .uri(uri)
-                        .body(new JsonObject(sRequestBody))
-                        .build();
-                DroolsWatcher.fireRules(
-                        "gatex", interceptorName + ".ProxyInterceptorC", requestFact);
-                log.debug("{}准备发送消息到{}: {}", interceptorName, sTopic, requestFact.getBody());
-                producer.send(requestFact.getMethod() + ":" + requestFact.getUri() + " " + requestFact.getBody());
-            } catch (final PulsarClientException e) {
-                log.error(interceptorName + "发送消息出现异常", e);
-                throw new RuntimeException(e);
-            }
-        });
-
-    }
+    // /**
+    // * 建立C类型代理拦截器
+    // * 在请求的同时发送一条消息到pulsar服务器
+    // *
+    // * @param interceptorName 拦截器名称
+    // * @param options 配置选项
+    // * @return 拦截器
+    // */
+    // @SneakyThrows
+    // public static ProxyInterceptor createProxyInterceptorC(final String interceptorName, final Object options,
+    // Injector injector) {
+    // log.info("createProxyInterceptorC {}: {}", interceptorName, options);
+    // Arguments.require(options != null, "并未配置" + interceptorName + "的值");
+    // Arguments.require(options instanceof Map, interceptorName + "的值必须为Map类型");
+    //
+    // @SuppressWarnings("unchecked")
+    // final Map<String, Object> optionsMap = (Map<String, Object>) options;
+    // final Object topicObject = optionsMap.get("topic");
+    // Arguments.require(topicObject != null, "并未配置" + interceptorName + ".topic的值");
+    // String sTopic = (String) topicObject;
+    // Arguments.require(StringUtils.isNotBlank(sTopic), interceptorName + ".topic的值不能为空");
+    //
+    // final PulsarClient pulsarClient = injector.getInstance(PulsarClient.class);
+    // Producer<String> producer = pulsarClient.newProducer(Schema.STRING).topic(sTopic).create();
+    // return ProxyInterceptorUtils.createProxyInterceptorA(interceptorName, options, (proxyContext, sRequestBody) -> {
+    // try {
+    // ProxyRequest proxyRequest = proxyContext.request();
+    // String method = proxyRequest.getMethod().name();
+    // String uri = proxyRequest.getURI();
+    // log.debug("{}接收到请求: {} {}", interceptorName, uri, sRequestBody);
+    //
+    // RequestFact requestFact = RequestFact.builder()
+    // .method(method)
+    // .uri(uri)
+    // .body(new JsonObject(sRequestBody))
+    // .build();
+    // DroolsWatcher.fireRules(
+    // "gatex", interceptorName + ".ProxyInterceptorC", requestFact);
+    // log.debug("{}准备发送消息到{}: {}", interceptorName, sTopic, requestFact.getBody());
+    // producer.send(requestFact.getMethod() + ":" + requestFact.getUri() + " " + requestFact.getBody());
+    // } catch (final PulsarClientException e) {
+    // log.error(interceptorName + "发送消息出现异常", e);
+    // throw new RuntimeException(e);
+    // }
+    // });
+    //
+    // }
 
 }

@@ -9,6 +9,7 @@ import com.google.inject.Injector;
 
 import io.vertx.core.Vertx;
 import io.vertx.core.impl.Arguments;
+import io.vertx.httpproxy.ProxyContext;
 import io.vertx.httpproxy.ProxyInterceptor;
 import io.vertx.httpproxy.ProxyRequest;
 import lombok.extern.slf4j.Slf4j;
@@ -52,11 +53,12 @@ public class PathReplaceProxyInterceptorFactory implements GatexProxyInterceptor
         String replacement = replacementTemp;
         return new ProxyInterceptor() {
             @Override
-            public void modifyProxyRequest(ProxyRequest proxyRequest) {
+            public void modifyProxyRequest(ProxyContext context) {
                 log.debug("{}.modifyProxyRequest 替换请求的链接: {}", name, replacePath);
-                String uri = proxyRequest.getURI();
+                ProxyRequest request = context.request();
+                String       uri     = request.getURI();
                 uri = StringUtils.isBlank(regex) ? replacement : uri.replaceAll(regex, replacement);
-                proxyRequest.setURI(uri);
+                request.setURI(uri);
                 log.debug("请求地址: {}", uri);
             }
 

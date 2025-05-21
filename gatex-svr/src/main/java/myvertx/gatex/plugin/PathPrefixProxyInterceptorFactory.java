@@ -1,5 +1,6 @@
 package myvertx.gatex.plugin;
 
+import io.vertx.httpproxy.ProxyContext;
 import org.apache.commons.lang3.StringUtils;
 
 import com.google.inject.Injector;
@@ -33,10 +34,11 @@ public class PathPrefixProxyInterceptorFactory implements GatexProxyInterceptorF
 
         return new ProxyInterceptor() {
             @Override
-            public void modifyProxyRequest(ProxyRequest proxyRequest) {
+            public void modifyProxyRequest(ProxyContext context) {
                 log.debug("{}.modifyProxyRequest 给请求链接添加前缀: {}", name, pathPrefix);
-                final String uri = pathPrefix + proxyRequest.getURI();
-                proxyRequest.setURI(uri);
+                ProxyRequest request = context.request();
+                final String uri = pathPrefix + request.getURI();
+                request.setURI(uri);
                 log.debug("请求地址: {}", uri);
             }
         };

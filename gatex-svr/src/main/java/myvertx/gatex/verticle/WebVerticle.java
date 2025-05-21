@@ -3,6 +3,7 @@ package myvertx.gatex.verticle;
 import java.util.*;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.core.async.AsyncLoggerContextSelector;
 
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpClientOptions;
@@ -29,6 +30,14 @@ import rebue.wheel.vertx.verticle.AbstractWebVerticle;
 
 @Slf4j
 public class WebVerticle extends AbstractWebVerticle {
+    static {
+        try {
+            log.info("是否为异步日志: {}", AsyncLoggerContextSelector.isSelected());
+        } catch (Exception e) {
+            log.error("打印是否为异步日志报错", e);
+        }
+    }
+
     @Inject
     private MainProperties                                  mainProperties;
 
@@ -235,7 +244,7 @@ public class WebVerticle extends AbstractWebVerticle {
         final ProxyHandler proxyHandler = ProxyHandler.create(httpProxy);
 
         log.debug("设置httpProxy的请求处理器");
-        httpProxy.originRequestProvider((req, client) -> client.request(requestOptions));
+        httpProxy.origin(proxyContext -> proxyContext.client().request(requestOptions));
 
         log.info("遍历当前循环的路由列表中的每一个路由，并添加代理处理器");
         for (Route route : routes) {

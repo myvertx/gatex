@@ -2,6 +2,7 @@ package myvertx.gatex.plugin;
 
 import java.util.Iterator;
 
+import io.vertx.httpproxy.ProxyContext;
 import org.apache.commons.lang3.StringUtils;
 
 import com.google.common.base.Splitter;
@@ -43,10 +44,11 @@ public class PathPrefixReplaceProxyInterceptorFactory implements GatexProxyInter
 
         return new ProxyInterceptor() {
             @Override
-            public void modifyProxyRequest(ProxyRequest proxyRequest) {
+            public void modifyProxyRequest(ProxyContext context) {
                 log.debug("{}.modifyProxyRequest 替换请求链接的前缀: {}", name, pathPrefixReplace);
-                final String uri = proxyRequest.getURI().replaceFirst("^" + regex, replacement);
-                proxyRequest.setURI(uri);
+                ProxyRequest request = context.request();
+                final String uri = request.getURI().replaceFirst("^" + regex, replacement);
+                request.setURI(uri);
                 log.debug("请求地址: {}", uri);
             }
         };

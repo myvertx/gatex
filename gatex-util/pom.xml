@@ -13,7 +13,7 @@
 
     <properties>
         <wheel.version>3.5.50</wheel.version>
-        <vertx.version>4.5.14</vertx.version>
+        <vertx.version>4.5.15</vertx.version>
         <guice.version>7.0.0</guice.version>
         <guava.version>33.0.0-jre</guava.version>
         <janino.version>3.1.12</janino.version>
@@ -100,12 +100,6 @@
             <groupId>org.kie</groupId>
             <artifactId>kie-api</artifactId>
             <version>${drools.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.pulsar</groupId>
-            <artifactId>pulsar-client</artifactId>
-            <version>${pulsar.version}</version>
         </dependency>
 
         <dependency>
