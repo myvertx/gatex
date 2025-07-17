@@ -12,7 +12,7 @@
     <description>基于vert.x构建的网关的工具</description>
 
     <properties>
-        <wheel.version>3.7.55</wheel.version>
+        <wheel.version>3.7.56</wheel.version>
         <vertx.version>4.5.15</vertx.version>
         <guice.version>7.0.0</guice.version>
         <guava.version>33.0.0-jre</guava.version>
