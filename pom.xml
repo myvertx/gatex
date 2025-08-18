@@ -19,7 +19,7 @@
         <maven.compiler.target>${java.version}</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-        <wheel.version>3.7.58</wheel.version>
+        <wheel.version>3.8.59</wheel.version>
     </properties>
 
     <dependencyManagement>
